@@ -15,6 +15,8 @@ public class JoinGameMenu : Menu
 
     protected override void OnStart()
     {
+        Cursor.lockState = CursorLockMode.None;
+
         OnActivated.AddListener(() =>
         {
             _joinCodeInputField.text = string.Empty;
@@ -84,7 +86,7 @@ public class JoinGameMenu : Menu
         }
 
         _joinedSession = true;
-        _joinStatusText.SetSuccess("Успех! Ожидание создания комнаты...");
+        _joinStatusText.SetSuccess("Успех! Ожидание создания лобби...");
     }
 
     public void JoinGameByCode()
@@ -146,7 +148,7 @@ public class JoinGameMenu : Menu
         }
 
         _joinedSession = true;
-        _joinStatusText.SetSuccess("Успех! Ожидание создания комнаты...");
+        _joinStatusText.SetSuccess("Успех! Ожидание создания лобби...");
     }
 
     private void OnDisconnectedFromGame()

@@ -65,9 +65,6 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  _maxClientWorldReconstructionAttempts: 3
   _ghostSpawnAfterTime: 5
-  _ghostPrepareTime: 30
-  _mainGameTime: 300
-  _worldGeneratorPrefab: {fileID: 3142781532931432514, guid: 7e2430bcdff782943a80ae5812d1be6c, type: 3}
-  _networkTimerPrefab: {fileID: 3695010726321708648, guid: 549172d3acfac8347a25e9d4351863c0, type: 3}
+  _ghostPrepareTime: 60
+  _mainGameTime: 600

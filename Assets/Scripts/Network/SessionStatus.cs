@@ -4,14 +4,14 @@ using UnityEngine;
 
 public enum StartSessionStatus
 {
-    None,
+    None = 0,
     Created,
     Failed
 }
 
 public enum KickPlayerStatus
 {
-    None,
+    None = 0,
     Kicked,
     IsNotHost,
     Failed
@@ -19,7 +19,7 @@ public enum KickPlayerStatus
 
 public enum StopSessionStatus
 {
-    None,
+    None = 0,
     Stopped,
     Failed
 }
@@ -30,14 +30,14 @@ public enum StopSessionStatus
 
 public enum FindSessionsStatus
 {
-    None,
+    None = 0,
     Found,
     Failed
 }
 
 public enum JoinSessionStatus
 {
-    None,
+    None = 0,
     Joined,
     NotFound,
     SessionIsFull,
@@ -46,7 +46,7 @@ public enum JoinSessionStatus
 
 public enum LeaveSessionStatus
 {
-    None,
+    None = 0,
     Left,
     Failed
 }

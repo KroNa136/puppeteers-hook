@@ -1,7 +1,6 @@
 using Mirror;
 using System;
 using System.IO;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -9,6 +8,7 @@ using UnityEngine.UI;
 public class GameSceneLobbyMenu : Menu
 {
     [Scene][SerializeField] private string _menuScene;
+    [SerializeField] private GameHud _hud;
 
     [Space]
 
@@ -38,6 +38,8 @@ public class GameSceneLobbyMenu : Menu
 
     protected override void OnStart()
     {
+        Cursor.lockState = CursorLockMode.Locked;
+
         var playersData = FindObjectsByType<PlayerData>(FindObjectsSortMode.None);
 
         foreach (var playerData in playersData)
@@ -58,7 +60,7 @@ public class GameSceneLobbyMenu : Menu
     {
         GameManager.OnClientPlayerRolesAssigned.AddListener(OnAssignedPlayerRoles);
         GameManager.OnClientWorldGenerationCompleted.AddListener(OnWorldGenerationCompleted);
-        GameManager.OnClientWorldReconstructionCompleted.AddListener(OnWorldReconstructionCompleted);
+        //GameManager.OnClientWorldReconstructionCompleted.AddListener(OnWorldReconstructionCompleted);
         GameManager.OnClientGhostPreparePhaseStarted.AddListener(OnGhostPreparePhaseStarted);
         GameManager.OnClientMainPhaseStarted.AddListener(OnMainPhaseStarted);
     }
@@ -106,7 +108,7 @@ public class GameSceneLobbyMenu : Menu
     [Obsolete("This method was created for an older architecture and is no longer in use. Call ShowPlayerRole for each player individually instead.")]
     private void ShowPlayerRoles()
     {
-        var lobbyPlayers = FindObjectsByType<LobbyPlayer>(FindObjectsSortMode.None);
+        // var lobbyPlayers = FindObjectsByType<LobbyPlayer>(FindObjectsSortMode.None);
 
         /*
         foreach (var lobbyPlayer in lobbyPlayers)
@@ -162,12 +164,20 @@ public class GameSceneLobbyMenu : Menu
 
     private void OnWorldGenerationCompleted()
     {
+        /*
         _gameStatusText.SetMessage("Реконструкция мира...");
 
         _progressSlider.value = 0f;
         GameManager.OnClientWorldReconstructionProgressUpdated.AddListener(SetProgress);
+        */
+
+        _gameStatusText.SetMessage("До начала игры: 0:00");
+
+        _progressSlider.gameObject.SetActive(false);
+        GameManager.OnClientTimerUpdated.AddListener(UpdateTimer);
     }
 
+    /*
     private void OnWorldReconstructionCompleted()
     {
         _gameStatusText.SetMessage("До начала игры: 0:00");
@@ -175,6 +185,7 @@ public class GameSceneLobbyMenu : Menu
         _progressSlider.gameObject.SetActive(false);
         GameManager.OnClientTimerUpdated.AddListener(UpdateTimer);
     }
+    */
 
     private void UpdateTimer(int seconds)
     {
@@ -187,7 +198,10 @@ public class GameSceneLobbyMenu : Menu
     private void OnGhostPreparePhaseStarted()
     {
         if (PlayerData.Local.Role is PlayerRole.Ghost)
+        {
             Deactivate();
+            _hud.Activate();
+        }
 
         // TODO: make a ghost status text explaining why the investigator is waiting for so long
     }
@@ -195,7 +209,10 @@ public class GameSceneLobbyMenu : Menu
     private void OnMainPhaseStarted()
     {
         if (PlayerData.Local.Role is PlayerRole.Investigator)
+        {
             Deactivate();
+            _hud.Activate();
+        }
     }
 
     private void GoToMenuScene() => SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(_menuScene));

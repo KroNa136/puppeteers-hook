@@ -1,65 +1,41 @@
 using System.Collections;
 using System.Collections.Generic;
+using Mirror;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class StaminaManager : MonoBehaviour
+public abstract class StaminaManager : NetworkBehaviour
 {
-    [Header("References")]
+    [SerializeField] protected float _maxStamina = 100f;
+    [SerializeField] protected float _regenerationTimeIfStanding = 20f;
+    [SerializeField] protected float _regenerationTimeIfMoving = 40f;
 
-    [SerializeField] GameObject staminaBar;
-    [SerializeField] Image staminaBarIcon;
-    [SerializeField] Image staminaBarFill;
-    [SerializeField] Slider slider;
-    [SerializeField] PlayerMovement playerMovement;
-    [SerializeField] PlayerAudioController audioController;
+    [SyncVar(hook = nameof(OnClientStaminaChanged))]
+    public float CurrentStamina;
 
-    [Header("Values")]
-
-    public float stamina = 30f;
-    [SerializeField] float maxStamina = 30f;
-    [SerializeField] float criticalStaminaFraction = 0.2f;
-
-    public bool IsCriticalStamina => stamina / maxStamina <= criticalStaminaFraction;
-
-    [Header("Speeds")]
-
-    [SerializeField] float regenerationSpeed = 1f;
-    [SerializeField] float runStaminaLossSpeed = 1f;
-
-    float dyspneaVolume;
-
-    Color color;
-
-    void Start()
+    public override void OnStartServer()
     {
-        slider.minValue = 0f;
-        slider.maxValue = maxStamina;
-        slider.value = maxStamina;
+        if (!isServer)
+            return;
 
-        stamina = maxStamina;
+        CurrentStamina = _maxStamina;
     }
 
-    void Update()
+    [Server]
+    public void ServerRegenerate(float deltaTime, bool isMoving)
     {
-        float change = playerMovement.State == PlayerMovement.MovementState.Running ? -runStaminaLossSpeed : regenerationSpeed;
-        stamina = Mathf.Clamp(stamina + change * Time.deltaTime, 0f, maxStamina);
+        if (!isServer)
+            return;
 
-        slider.value = stamina;
+        float regenerationTime = isMoving ? _regenerationTimeIfMoving : _regenerationTimeIfStanding;
 
-        if (IsCriticalStamina)
-            color = new Color(1f, 0f, 0f, 0.5f);
-        else
-            color = new Color(1f, 1f, 1f, 0.5f);
-
-        staminaBarIcon.color = color;
-        staminaBarFill.color = color;
-
-        staminaBar.SetActive(stamina < maxStamina);
-
-        // 1-stamina/maxStamina = [0; 1] * (1 - (1-critFraction)) + (1-critFraction)
-        // [0; 1] = (1-stamina/maxStamina - (1-critFraction)) / (1 - (1-critFraction))
-        dyspneaVolume = (criticalStaminaFraction - (stamina / maxStamina)) / criticalStaminaFraction;
-        audioController.SetDyspneaSoundVolume(dyspneaVolume);
+        CurrentStamina = Mathf.Clamp
+        (
+            value: CurrentStamina + _maxStamina * (deltaTime / regenerationTime),
+            min: 0f,
+            max: _maxStamina
+        );
     }
+
+    public abstract void ServerDrain(float deltaTime);
+    public abstract void OnClientStaminaChanged(float oldValue, float newValue);
 }

@@ -4,11 +4,14 @@ using UnityEngine;
 
 public class MainMenu : Menu
 {
-    [SerializeField] private Menu _createGameMenu;
-    [SerializeField] private Menu _joinGameMenu;
-    [SerializeField] private Menu _settingsMenu;
+    [SerializeField] private CreateGameMenu _createGameMenu;
+    [SerializeField] private JoinGameMenu _joinGameMenu;
+    [SerializeField] private SettingsMenu _settingsMenu;
 
-    protected override void OnStart() { }
+    protected override void OnStart()
+    {
+        Cursor.lockState = CursorLockMode.None;
+    }
 
     public void CreateGame()
     {

@@ -34,8 +34,6 @@ public abstract class Menu : MonoBehaviour
         OnStart();
     }
 
-    protected abstract void OnStart();
-
     public void Toggle()
     {
         if (IsActive)
@@ -46,8 +44,7 @@ public abstract class Menu : MonoBehaviour
 
     public void Activate()
     {
-        if (_parentMenu != null)
-            _parentMenu.Deactivate();
+        _ = _parentMenu.Bind(m => m.Deactivate());
 
         IsActive = true;
 
@@ -60,12 +57,13 @@ public abstract class Menu : MonoBehaviour
         }
 
         _fadeInCoroutine = StartCoroutine(FadeIn());
+
+        OnActivate();
     }
 
     public void Deactivate()
     {
-        if (_parentMenu != null)
-            _parentMenu.Activate();
+        _ = _parentMenu.Bind(m => m.Activate());
 
         IsActive = false;
 
@@ -78,6 +76,8 @@ public abstract class Menu : MonoBehaviour
         }
 
         _fadeOutCoroutine = StartCoroutine(FadeOut());
+
+        OnDeactivate();
     }
 
     private IEnumerator FadeIn()
@@ -115,4 +115,8 @@ public abstract class Menu : MonoBehaviour
 
         _fadeOutCoroutine = null;
     }
+
+    protected virtual void OnStart() { }
+    protected virtual void OnActivate() { }
+    protected virtual void OnDeactivate() { }
 }

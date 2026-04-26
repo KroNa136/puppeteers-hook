@@ -1,3 +1,4 @@
+using System.Linq;
 using Mirror;
 using UnityEngine;
 using UnityEngine.Events;
@@ -35,6 +36,7 @@ public class LobbyNotifier : NetworkBehaviour
     [ClientRpc]
     public void RpcSceneReady()
     {
+        //Debug.Log($"Rpc Scene Ready invoked, spawned network objects: {string.Join(", ", FindObjectsByType<NetworkIdentity>(FindObjectsSortMode.None).Select(obj => obj.gameObject.name))}");
         OnSceneReady.Invoke();
     }
 }

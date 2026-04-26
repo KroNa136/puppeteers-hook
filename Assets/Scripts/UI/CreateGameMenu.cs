@@ -16,6 +16,8 @@ public class CreateGameMenu : Menu
 
     protected override void OnStart()
     {
+        Cursor.lockState = CursorLockMode.None;
+
         OnActivated.AddListener(() =>
         {
             _publicGameToggle.isOn = false;
@@ -54,9 +56,9 @@ public class CreateGameMenu : Menu
 
         bool isPublic = _publicGameToggle.isOn;
 
-        var startSessionStatus = isPublic ?
-            await SessionManager.Instance.StartPublicSessionAsHost() :
-            await SessionManager.Instance.StartPrivateSessionAsHost();
+        var startSessionStatus = isPublic
+            ? await SessionManager.Instance.StartPublicSessionAsHost()
+            : await SessionManager.Instance.StartPrivateSessionAsHost();
 
         if (startSessionStatus is StartSessionStatus.Failed)
         {
@@ -76,7 +78,6 @@ public class CreateGameMenu : Menu
     private void OnLastPlayerJoined()
     {
         _gameStatusText.SetMessage("Создание лобби...");
-        // TODO: go to lobby scene
     }
 
     public async void Cancel()

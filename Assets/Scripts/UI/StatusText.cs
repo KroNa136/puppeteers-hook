@@ -10,6 +10,8 @@ public class StatusText : MonoBehaviour
     [SerializeField] private Color _disabledColor = Color.gray;
     [SerializeField] private TMP_Text _text;
 
+    public string Text => _text.text;
+
     private void Start()
     {
         _text = GetComponent<TMP_Text>();

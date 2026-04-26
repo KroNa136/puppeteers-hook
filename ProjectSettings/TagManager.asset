@@ -3,7 +3,8 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 3
-  tags: []
+  tags:
+  - ReflectiveSurface
   layers:
   - Default
   - TransparentFX
@@ -13,12 +14,12 @@ TagManager:
   - UI
   - Ghost
   - Investigator
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Door
+  - Sanity Loss Area
+  - Prop
+  - Ghost Dashing
+  - Small Prop
+  - Room
   - 
   - 
   - 

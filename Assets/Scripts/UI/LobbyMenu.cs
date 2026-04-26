@@ -26,6 +26,8 @@ public class LobbyMenu : Menu
 
     protected override void OnStart()
     {
+        Cursor.lockState = CursorLockMode.None;
+
         _lobbyStatusText.SetMessage("Ожидание готовности всех игроков...");
         _quitButton.interactable = true;
         _readyButton.interactable = false;

@@ -167,4 +167,12 @@ QualitySettings:
     excludedTargetPlatforms: []
   m_TextureMipmapLimitGroupNames: []
   m_PerPlatformDefaultQuality:
+    Android: 0
     Nintendo Switch 2: 2
+    Server: 0
+    Standalone: 0
+    VisionOS: 0
+    WebGL: 0
+    Windows Store Apps: 0
+    iPhone: 0
+    tvOS: 0

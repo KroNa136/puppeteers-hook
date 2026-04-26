@@ -64,9 +64,9 @@ public class SessionManager : MonoBehaviour
             MaxPlayers = LobbyNetworkManager.Instance.maxConnections
         };
 
-        options = _useRelay ?
-            options.WithRelayNetwork().WithNetworkOptions(new NetworkOptions { RelayProtocol = _relayProtocol }) :
-            options.WithDirectNetwork(new DirectNetworkOptions(LobbyNetworkManager.Instance.Port));
+        options = _useRelay
+            ? options.WithRelayNetwork().WithNetworkOptions(new NetworkOptions { RelayProtocol = _relayProtocol })
+            : options.WithDirectNetwork(new DirectNetworkOptions(LobbyNetworkManager.Instance.Port));
 
         options = options.WithNetworkHandler(new MirrorNetworkHandler());
 
@@ -100,9 +100,9 @@ public class SessionManager : MonoBehaviour
             MaxPlayers = LobbyNetworkManager.Instance.maxConnections
         };
 
-        options = _useRelay ?
-            options.WithRelayNetwork().WithNetworkOptions(new NetworkOptions { RelayProtocol = _relayProtocol}) :
-            options.WithDirectNetwork(new DirectNetworkOptions(LobbyNetworkManager.Instance.Port));
+        options = _useRelay
+            ? options.WithRelayNetwork().WithNetworkOptions(new NetworkOptions { RelayProtocol = _relayProtocol})
+            : options.WithDirectNetwork(new DirectNetworkOptions(LobbyNetworkManager.Instance.Port));
 
         options = options.WithNetworkHandler(new MirrorNetworkHandler());
 

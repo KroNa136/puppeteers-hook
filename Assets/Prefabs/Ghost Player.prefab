@@ -42,10 +42,18 @@ GameObject:
   - component: {fileID: 4046195905244358814}
   - component: {fileID: 8159529224873777892}
   - component: {fileID: 7698138393451474321}
-  - component: {fileID: 4817498608248891458}
-  - component: {fileID: 200487032496878601}
+  - component: {fileID: 7145199001117608974}
   - component: {fileID: 5280373414735075830}
   - component: {fileID: 4681895353429000622}
+  - component: {fileID: 8489875789522777056}
+  - component: {fileID: 5349686073487629413}
+  - component: {fileID: 4394659906250579869}
+  - component: {fileID: 2904129310658565891}
+  - component: {fileID: 3502150757311578552}
+  - component: {fileID: 3260442642485016982}
+  - component: {fileID: 8256429049092436347}
+  - component: {fileID: 5265270982247206670}
+  - component: {fileID: 4263113041922564977}
   m_Layer: 6
   m_Name: Ghost Player
   m_TagString: Untagged
@@ -112,7 +120,7 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &4817498608248891458
+--- !u!114 &7145199001117608974
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -121,41 +129,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 2158207726470445865}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Script: {fileID: 11500000, guid: ec51a1fa599b6724e8b5feb18dff5515, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
-  m_Actions: {fileID: -944628639613478452, guid: 35845fe01580c41289b024647b1d1c53, type: 3}
-  m_NotificationBehavior: 3
-  m_UIInputModule: {fileID: 0}
-  m_DeviceLostEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_DeviceRegainedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ControlsChangedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ActionEvents: []
-  m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
-  m_DefaultActionMap: 
-  m_SplitScreenIndex: -1
-  m_Camera: {fileID: 0}
---- !u!114 &200487032496878601
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2158207726470445865}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: be869062301052e47a1b828e5ab45046, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InputManager
-  _smoothInputSpeed: 0.01
-  _smoothInputDeadZone: 0.01
+  m_EditorClassIdentifier: Assembly-CSharp::PauseManager
 --- !u!114 &5280373414735075830
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -172,26 +148,33 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0
   _cameraRoot: {fileID: 8650449368380899707}
-  _groundDistanceOffset: 0.05
+  _inputActions: {fileID: -944628639613478452, guid: 35845fe01580c41289b024647b1d1c53, type: 3}
+  _groundDistanceOffset: 0.1
   _groundMask:
     serializedVersion: 2
-    m_Bits: 72
+    m_Bits: 1032
   _terminalFallingVelocity: -50
   _defaultVerticalForce: -1.5
   _maxNetworkPositionError: 0.05
   _smoothLocalMovement: 1
   _smoothPositionErrorCorrection: 0
   _positionErrorCorrectionTime: 0.1
+  CanBeControlledByPlayer: 1
   CanDash: 0
   IsPreparingToDash: 0
   IsDashing: 0
   DashDirection: {x: 0, y: 0, z: 0}
+  IsInPreparePhase: 0
   _walkingSpeed: 0.75
   _dashSpeed: 6
-  _dashHoldTimeRequired: 1
+  _preparePhaseSpeed: 3
+  _dashChargeDuration: 1
   _dashPrepareDuration: 1
-  _dashDuration: 1
-  _dashCooldownDuration: 40
+  _fearGameTimeDecrease: 10
+  _touchedInvestigatorsCheckControllerRadiusInflation: 3
+  _roomLayerMask:
+    serializedVersion: 2
+    m_Bits: 8192
 --- !u!114 &4681895353429000622
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -207,6 +190,257 @@ MonoBehaviour:
   _cameraRoot: {fileID: 8650449368380899707}
   _invertYAxis: 0
   _sensitivity: 0.1
+  CanBeControlledByPlayer: 1
+--- !u!114 &8489875789522777056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2158207726470445865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 759a3d03ecd834e4692abc915a7188e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GhostStaminaManager
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  _maxStamina: 100
+  _regenerationTimeIfStanding: 20
+  _regenerationTimeIfMoving: 40
+  CurrentStamina: 0
+  _dashTime: 1
+--- !u!114 &5349686073487629413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2158207726470445865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e74b5664142469d4ea58ab889a5c7f1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Compass
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  HasTarget: 0
+  _target: {fileID: 0}
+  _verticalDistanceToTargetThreshold: 1.5
+--- !u!114 &4394659906250579869
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2158207726470445865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d89b527b8f490440bff8f106c664ae1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GhostVisibilityManager
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  _highVisibilityAlpha: 1
+  _lowVisibilityAlpha: 0.5
+  _zeroVisibilityAlpha: 0
+--- !u!114 &2904129310658565891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2158207726470445865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e9886173d99f944892e999019ccd760, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GhostAbilityManager
+  CanBeControlledByPlayer: 1
+--- !u!114 &3502150757311578552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2158207726470445865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0c3782aa1a55d94da7e708f232e2531, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GhostStealthAbility
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  OnCanBeActivatedChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStartCooldown:
+    m_PersistentCalls:
+      m_Calls: []
+  OnTimerUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStopCooldown:
+    m_PersistentCalls:
+      m_Calls: []
+  _data: {fileID: 11400000, guid: 67e00b3f2421c0b46a7432033e3e3c85, type: 2}
+  IsActivated: 0
+  IsCoolingDown: 0
+  CanBeActivated: 0
+  _visibilityManager: {fileID: 4394659906250579869}
+--- !u!114 &3260442642485016982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2158207726470445865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5d1d11fe37dbc24caac2966ffa777ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GhostDecoyAbility
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  OnCanBeActivatedChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStartCooldown:
+    m_PersistentCalls:
+      m_Calls: []
+  OnTimerUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStopCooldown:
+    m_PersistentCalls:
+      m_Calls: []
+  _data: {fileID: 11400000, guid: 8140f98da0b4cb347972a6c0f64efa77, type: 2}
+  IsActivated: 0
+  IsCoolingDown: 0
+  CanBeActivated: 0
+  _minNoteLength: 100
+  _maxNoteLength: 200
+  _groundYOffset: 0.01
+--- !u!114 &8256429049092436347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2158207726470445865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e1c70c4b22c9ce438eb85eb25a1846f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GhostTimeCatcherAbility
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  OnCanBeActivatedChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStartCooldown:
+    m_PersistentCalls:
+      m_Calls: []
+  OnTimerUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStopCooldown:
+    m_PersistentCalls:
+      m_Calls: []
+  _data: {fileID: 11400000, guid: 3a5ccfa50af3ad144a2006bdaacfb6b0, type: 2}
+  IsActivated: 0
+  IsCoolingDown: 0
+  CanBeActivated: 0
+  _positionOffset: {x: 0, y: 0, z: 0.5}
+--- !u!114 &5265270982247206670
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2158207726470445865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 046d6502ef007bf43b10a1b3f8aaeb5f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GhostDoorLockAbility
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  OnCanBeActivatedChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStartCooldown:
+    m_PersistentCalls:
+      m_Calls: []
+  OnTimerUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStopCooldown:
+    m_PersistentCalls:
+      m_Calls: []
+  _data: {fileID: 11400000, guid: 1233c2aa3146547438d8d181e9447674, type: 2}
+  IsActivated: 0
+  IsCoolingDown: 0
+  CanBeActivated: 0
+  _roomLayerMask:
+    serializedVersion: 2
+    m_Bits: 8192
+--- !u!114 &4263113041922564977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2158207726470445865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4ede190a90f6bd45bed8d5a027607b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GhostIllusionAbility
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  OnCanBeActivatedChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStartCooldown:
+    m_PersistentCalls:
+      m_Calls: []
+  OnTimerUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStopCooldown:
+    m_PersistentCalls:
+      m_Calls: []
+  _data: {fileID: 11400000, guid: d97b25e0536a89d46978cb703c8a7eff, type: 2}
+  IsActivated: 0
+  IsCoolingDown: 0
+  CanBeActivated: 0
+  _roomLayerMask:
+    serializedVersion: 2
+    m_Bits: 8192
 --- !u!1 &4571124614379765474
 GameObject:
   m_ObjectHideFlags: 0
@@ -273,7 +507,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 73c176f402d2c2f4d929aa5da7585d17, type: 2}
+  - {fileID: 2100000, guid: 23ebad99eefe84b4e8974aaa52a93d2b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

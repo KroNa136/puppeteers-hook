@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Mirror;
 using Unity.Networking.Transport.Relay;
@@ -43,13 +44,82 @@ public class LobbyNetworkManager : NetworkManager
     [SerializeField] private GameObject _gameManagerPrefab;
     [SerializeField] private GameObject _worldGeneratorPrefab;
     [SerializeField] private GameObject _networkTimerPrefab;
+
+    [Space]
+
+    [SerializeField] private GameObject _mainHallPrefab;
+    [SerializeField] private GameObject _emergencyExitPrefab;
+    [SerializeField] private GameObject _hallPrefab;
+    [SerializeField] private GameObject _livingRoomPrefab;
+    [SerializeField] private GameObject _simpleCorridorPrefab;
+    [SerializeField] private GameObject _tShapedCorridorPrefab;
+    [SerializeField] private GameObject _stairwayRoomPrefab;
+    [SerializeField] private GameObject _statuesPuzzleRoomPrefab;
+    [SerializeField] private GameObject _rotatingMirrorsPuzzleRoomPrefab;
+
+    [Space]
+
+    [SerializeField] private GameObject _candlesticksPuzzlePrefab;
+    [SerializeField] private GameObject _statuesPuzzlePrefab;
+    [SerializeField] private GameObject _rotatingMirrorsPuzzlePrefab;
+    [SerializeField] private GameObject _investigatorWinTriggerPrefab;
+
+    [Space]
+
+    [SerializeField] private GameObject _candlestickPrefab;
+    [SerializeField] private GameObject _statuePrefab;
+    [SerializeField] private GameObject _windRosePrefab;
+    [SerializeField] private GameObject _rotatingMirrorPrefab;
+    [SerializeField] private GameObject _reflectableLightSourcePrefab;
+    [SerializeField] private GameObject _reflectableLightTargetPrefab;
+
+    [Space]
+
+    [SerializeField] private GameObject _amuletPrefab;
     [SerializeField] private GameObject _doorPrefab;
+    [SerializeField] private GameObject _notePrefab;
+
+    [Space]
+
+    [SerializeField] private GameObject _timeCatcherPrefab;
+
+    public GameObject WorldGeneratorPrefab => _worldGeneratorPrefab;
+    public GameObject NetworkTimerPrefab => _networkTimerPrefab;
+
+    public GameObject MainHallPrefab => _mainHallPrefab;
+    public GameObject EmergencyExitPrefab => _emergencyExitPrefab;
+    public GameObject HallPrefab => _hallPrefab;
+    public GameObject LivingRoomPrefab => _livingRoomPrefab;
+    public GameObject SimpleCorridorPrefab => _simpleCorridorPrefab;
+    public GameObject TShapedCorridorPrefab => _tShapedCorridorPrefab;
+    public GameObject StairwayRoomPrefab => _stairwayRoomPrefab;
+    public GameObject StatuesPuzzleRoomPrefab => _statuesPuzzleRoomPrefab;
+    public GameObject RotatingMirrorsPuzzleRoomPrefab => _rotatingMirrorsPuzzleRoomPrefab;
+
+    public GameObject CandlesticksPuzzlePrefab => _candlesticksPuzzlePrefab;
+    public GameObject StatuesPuzzlePrefab => _statuesPuzzlePrefab;
+    public GameObject RotatingMirrorsPuzzlePrefab => _rotatingMirrorsPuzzlePrefab;
+    public GameObject InvestigatorWinTriggerPrefab => _investigatorWinTriggerPrefab;
+
+    public GameObject CandlestickPrefab => _candlestickPrefab;
+    public GameObject StatuePrefab => _statuePrefab;
+    public GameObject WindRosePrefab => _windRosePrefab;
+    public GameObject RotatingMirrorPrefab => _rotatingMirrorPrefab;
+    public GameObject ReflectableLightSourcePrefab => _reflectableLightSourcePrefab;
+    public GameObject ReflectableLightTargetPrefab => _reflectableLightTargetPrefab;
+
+    public GameObject AmuletPrefab => _amuletPrefab;
+    public GameObject DoorPrefab => _doorPrefab;
+    public GameObject NotePrefab => _notePrefab;
+
+    public GameObject TimeCatcherPrefab => _timeCatcherPrefab;
 
     private UtpTransport _utpTransport;
     public ushort Port => _utpTransport.Port;
 
     private readonly Dictionary<NetworkConnectionToClient, PlayerData> _connectedPlayersData = new();
-    public List<PlayerData> ConnectedPlayers => _connectedPlayersData.Values.ToList();
+    public List<NetworkConnectionToClient> ConnectedPlayers => _connectedPlayersData.Keys.ToList();
+    public List<PlayerData> ConnectedPlayersData => _connectedPlayersData.Values.ToList();
     public PlayerData GetConnectedPlayerData(NetworkConnectionToClient connectionToClient) =>
         _connectedPlayersData.TryGetValue(connectionToClient, out PlayerData playerData) ? playerData : null;
     public NetworkConnectionToClient GetConnectionForRole(PlayerRole role) =>
@@ -286,7 +356,7 @@ public class LobbyNetworkManager : NetworkManager
         if (NetworkServer.active)
             ServerChangeSceneByPath(_menuScene);
         else
-            _ = SceneManager.LoadSceneAsync(SceneManager.GetSceneByPath(_menuScene).name);
+            _ = SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(_menuScene));
     }
 
     [Server]
@@ -332,7 +402,7 @@ public class LobbyNetworkManager : NetworkManager
             _ = playerData.GetComponent<NetworkIdentity>().AssignClientAuthority(connection);
 
             _connectedPlayersData[connection] = playerData.GetComponent<PlayerData>();
-        }
+        };
 
         GoToLobbyScene();
     }
@@ -416,6 +486,11 @@ public class LobbyNetworkManager : NetworkManager
 
     public override void OnServerDisconnect(NetworkConnectionToClient conn)
     {
+        Debug.Log("on server disconnect");
+
+        if (!_connectedPlayersData.ContainsKey(conn))
+            return;
+
         _connectedPlayersData[conn].Role = PlayerRole.None;
         _connectedPlayersData[conn] = null;
 
@@ -423,11 +498,16 @@ public class LobbyNetworkManager : NetworkManager
 
         NetworkServer.DestroyPlayerForConnection(conn);
 
-        if (!SceneManager.GetActiveScene().path.Equals(_menuScene))
+        // Since the server is the host, we need to have 1 leftover player in order to shut down, not 0 players.
+        if (_connectedPlayersData.Count <= 1)
         {
-            // TODO: client disconnent reason
             ServerStopSessionAsync();
-            GoToMenuScene();
+
+            _readyConnections.Clear();
+            _connectedPlayersData.Clear();
+
+            if (!SceneManager.GetActiveScene().path.Equals(_menuScene))
+                GoToMenuScene();
         }
     }
 
@@ -470,15 +550,42 @@ public class LobbyNetworkManager : NetworkManager
             NetworkClient.RegisterPrefab(prefab);
         */
 
-        NetworkClient.RegisterPrefab(_lobbyNotifierPrefab);
-        NetworkClient.RegisterPrefab(_playerDataPrefab);
-        NetworkClient.RegisterPrefab(_lobbyPlayerPrefab);
-        NetworkClient.RegisterPrefab(_ghostPlayerPrefab);
-        NetworkClient.RegisterPrefab(_investigatorPlayerPrefab);
-        NetworkClient.RegisterPrefab(_gameManagerPrefab);
-        NetworkClient.RegisterPrefab(_worldGeneratorPrefab);
-        NetworkClient.RegisterPrefab(_networkTimerPrefab);
-        //NetworkClient.RegisterPrefab(_doorPrefab);
+        _ = _lobbyNotifierPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _playerDataPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _lobbyPlayerPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _ghostPlayerPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _investigatorPlayerPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _gameManagerPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _worldGeneratorPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _networkTimerPrefab.Bind(NetworkClient.RegisterPrefab);
+
+        _ = _mainHallPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _emergencyExitPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _hallPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _livingRoomPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _simpleCorridorPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _tShapedCorridorPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _stairwayRoomPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _statuesPuzzleRoomPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _rotatingMirrorsPuzzleRoomPrefab.Bind(NetworkClient.RegisterPrefab);
+
+        _ = _candlesticksPuzzlePrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _statuesPuzzlePrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _rotatingMirrorsPuzzlePrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _investigatorWinTriggerPrefab.Bind(NetworkClient.RegisterPrefab);
+
+        _ = _candlestickPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _statuePrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _windRosePrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _rotatingMirrorPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _reflectableLightSourcePrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _reflectableLightTargetPrefab.Bind(NetworkClient.RegisterPrefab);
+
+        _ = _amuletPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _doorPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _notePrefab.Bind(NetworkClient.RegisterPrefab);
+
+        _ = _timeCatcherPrefab.Bind(NetworkClient.RegisterPrefab);
     }
 
     public override void OnClientConnect()
@@ -507,10 +614,10 @@ public class LobbyNetworkManager : NetworkManager
 
     public override void OnClientDisconnect()
     {
-        //if (SceneManager.GetActiveScene().path != _menuScene)
-        //    ClientChangeScene();
-
         OnClientDisconnected.Invoke();
+
+        if (!SceneManager.GetActiveScene().path.Equals(_menuScene))
+            GoToMenuScene();
     }
 
     #endregion Client Overrides
