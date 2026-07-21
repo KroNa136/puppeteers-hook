@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Mirror;
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class FearManager : NetworkBehaviour
 {
-    [SerializeField] private PlayerAudioController _audioController;
+    [SerializeField] private InvestigatorAudioController _audioController;
+    [SerializeField] private AudioMixer _audioMixer;
 
     [Space]
 
@@ -73,8 +75,8 @@ public class FearManager : NetworkBehaviour
         if (!_fearCauses.Contains(cause))
             _fearCauses.Add(cause);
 
-        ServerSetCurrentFear();
         RpcStartBeingAfraid();
+        ServerSetCurrentFear();
     }
 
     [Server]
@@ -121,21 +123,25 @@ public class FearManager : NetworkBehaviour
             _cameraShakeCoroutine = null;
         }
 
+        if (!isLocalPlayer)
+            return;
+
         _cameraShakeCoroutine = StartCoroutine(CameraShake());
 
-        // TODO: enable stun audio effects (world sounds audio channel: reverb + LPF)
-
-        // _ = _audioController
-        //     .Bind(c => c.PlayFearSound());
+        _ = _audioController.Bind(c => c.PlayFearSound());
     }
 
     [ClientRpc]
     public void RpcStopBeingAfraid()
     {
-        // TODO: disable stun audio effects (world sounds audio channel: reverb + LPF)
+        if (!isLocalPlayer)
+            return;
 
-        // _ = _audioController
-        //     .Bind(c => c.StopPlayingFearSound());
+        _ = _audioMixer
+            .Bind((mixer, param, value) => mixer.SetFloat(param, value), "world_echo_wetmix", 0f)
+            .Bind((mixer, param, value) => mixer.SetFloat(param, value), "world_lowpass_cutoff_freq", 22000f);
+
+        _ = _audioController.Bind(c => c.StopFearSound());
     }
 
     [Client]
@@ -185,11 +191,15 @@ public class FearManager : NetworkBehaviour
     [Client]
     public void OnClientCurrentFearChanged(float oldValue, float newValue)
     {
-        if (!isClient)
+        if (!isLocalPlayer)
             return;
 
-        // TODO: control stun audio effects if possible (world sounds audio channel: reverb + LPF)
+        float fearFraction = newValue / _maxFear;
 
-        // _ = _audioController.Bind(c => c.SetFearSoundVolume(newValue / _maxFear);
+        _ = _audioMixer
+            .Bind((mixer, param, value) => mixer.SetFloat(param, value), "world_echo_wetmix", 0.7f * fearFraction)
+            .Bind((mixer, param, value) => mixer.SetFloat(param, value), "world_lowpass_cutoff_freq", 1500f + (22000f - 1500f) * fearFraction);
+
+        _ = _audioController.Bind((controller, volume) => controller.SetFearVolume(volume), fearFraction);
     }
 }

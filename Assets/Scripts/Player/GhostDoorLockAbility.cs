@@ -13,6 +13,11 @@ public class GhostDoorLockAbility : GhostAbility
 
     private readonly Dictionary<Door, Coroutine> _closeAndLockCoroutines = new();
 
+    protected override void PlayActivationSound()
+    {
+        _ = _audioController.Bind(c => c.PlayDoorLockAbilityActivationSound());
+    }
+
     [Server]
     public override void OnStartServer()
     {
@@ -44,14 +49,13 @@ public class GhostDoorLockAbility : GhostAbility
             .Take(overlapCount)
             .Select(o => o.TryGetComponent(out Room room) ? room : null)
             .NonNullItems()
+            .Select(r => r.LinkedNetworkRoom)
             .SelectMany(r => r.Doors)
+            .Where(d => !d.IsLocked)
             .ToList();
 
         foreach (var door in _doorsToLock)
         {
-            if (door.IsLocked)
-                continue;
-
             if (door.IsOpened)
                 _closeAndLockCoroutines[door] = StartCoroutine(ServerCloseAndLock(door));
             else

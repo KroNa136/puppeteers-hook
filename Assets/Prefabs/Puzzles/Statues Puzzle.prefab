@@ -1,5 +1,51 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &484614498401193892
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5019513198804894865}
+  - component: {fileID: 2577898461717392141}
+  m_Layer: 0
+  m_Name: Puzzle Note Spawn Point (5)
+  m_TagString: Untagged
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5019513198804894865
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 484614498401193892}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.7428336, z: -0, w: 0.6694761}
+  m_LocalPosition: {x: -1.771, y: -0.862, z: 2.039}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7997082749196845264}
+  m_LocalEulerAnglesHint: {x: 0, y: 95.947, z: 0}
+--- !u!114 &2577898461717392141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 484614498401193892}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f274016fdc19104c9d1a834e863708d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpawnPoint
+  _type: 12
+  _spawnChance: 1
 --- !u!1 &950879690384280396
 GameObject:
   m_ObjectHideFlags: 0
@@ -13,7 +59,7 @@ GameObject:
   m_Layer: 0
   m_Name: Statue Spawn Point (1)
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -26,7 +72,7 @@ Transform:
   m_GameObject: {fileID: 950879690384280396}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.5, y: -0.4, z: 0}
+  m_LocalPosition: {x: -1.95, y: -0.38, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -59,7 +105,7 @@ GameObject:
   m_Layer: 0
   m_Name: Statue Spawn Point (4)
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -72,7 +118,7 @@ Transform:
   m_GameObject: {fileID: 1045089919572958181}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.5, y: -0.4, z: 0}
+  m_LocalPosition: {x: 1.95, y: -0.38, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -105,7 +151,7 @@ GameObject:
   m_Layer: 0
   m_Name: Statue Spawn Point (3)
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -118,7 +164,7 @@ Transform:
   m_GameObject: {fileID: 1410874346639243286}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.5, y: -0.4, z: 3.5}
+  m_LocalPosition: {x: 2.3, y: -0.38, z: 3.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -151,7 +197,7 @@ GameObject:
   m_Layer: 0
   m_Name: Statue Spawn Point
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -164,7 +210,7 @@ Transform:
   m_GameObject: {fileID: 1441916670215913385}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.5, y: -0.4, z: -3.5}
+  m_LocalPosition: {x: -2.3, y: -0.38, z: -3.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -197,7 +243,7 @@ GameObject:
   m_Layer: 0
   m_Name: Puzzle Note Spawn Point (3)
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -209,13 +255,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2980535138175590837}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.7, y: -1.45, z: 2}
+  m_LocalRotation: {x: -0, y: 0.7381697, z: -0, w: 0.674615}
+  m_LocalPosition: {x: -1.9489999, y: -0.862, z: 1.252}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7997082749196845264}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 95.151, z: 0}
 --- !u!114 &5721375266417140525
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -243,7 +289,7 @@ GameObject:
   m_Layer: 0
   m_Name: Statue Spawn Point (5)
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -256,7 +302,7 @@ Transform:
   m_GameObject: {fileID: 4089510171014717649}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.5, y: -0.4, z: -3.5}
+  m_LocalPosition: {x: 2.3, y: -0.38, z: -3.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -289,7 +335,7 @@ GameObject:
   m_Layer: 0
   m_Name: Puzzle Note Spawn Point (1)
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -301,13 +347,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4161875536942319238}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.7, y: -1.45, z: -2}
+  m_LocalRotation: {x: -0, y: -0.6627049, z: -0, w: 0.7488807}
+  m_LocalPosition: {x: 2.432, y: -0.787, z: -1.661}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7997082749196845264}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -83.013, z: 0}
 --- !u!114 &839273313220469925
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -335,7 +381,7 @@ GameObject:
   m_Layer: 0
   m_Name: Puzzle Note Spawn Point (2)
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -347,13 +393,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4167607395508163464}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.7, y: -1.45, z: -2}
+  m_LocalRotation: {x: -0, y: 0.62152493, z: -0, w: 0.78339446}
+  m_LocalPosition: {x: -1.925, y: -0.8696, z: -2.007}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7997082749196845264}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 76.855, z: 0}
 --- !u!114 &4317837372737346704
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -379,6 +425,7 @@ GameObject:
   - component: {fileID: 7997082749196845264}
   - component: {fileID: 5596273459875858786}
   - component: {fileID: 960575665978026432}
+  - component: {fileID: 7194030172541936640}
   m_Layer: 0
   m_Name: Statues Puzzle
   m_TagString: Untagged
@@ -410,7 +457,9 @@ Transform:
   - {fileID: 1343394785378211187}
   - {fileID: 4374757481474955563}
   - {fileID: 4798749239594699896}
+  - {fileID: 2202205225388915075}
   - {fileID: 8998388634009956121}
+  - {fileID: 5019513198804894865}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5596273459875858786
@@ -448,6 +497,64 @@ MonoBehaviour:
   _roomLayerMask:
     serializedVersion: 2
     m_Bits: 8192
+--- !u!114 &7194030172541936640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6154225710585274616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ec9ef3dff752ca4199af140571ea897, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AlwaysVisible
+--- !u!1 &6918942491262833688
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2202205225388915075}
+  - component: {fileID: 6715394800976749399}
+  m_Layer: 0
+  m_Name: Puzzle Note Spawn Point (4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2202205225388915075
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6918942491262833688}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.70182574, z: -0, w: 0.7123488}
+  m_LocalPosition: {x: -1.9159999, y: -0.8696, z: -1.284}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7997082749196845264}
+  m_LocalEulerAnglesHint: {x: 0, y: 89.147, z: 0}
+--- !u!114 &6715394800976749399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6918942491262833688}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f274016fdc19104c9d1a834e863708d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpawnPoint
+  _type: 12
+  _spawnChance: 1
 --- !u!1 &7001807539632429836
 GameObject:
   m_ObjectHideFlags: 0
@@ -461,7 +568,7 @@ GameObject:
   m_Layer: 0
   m_Name: Puzzle Note Spawn Point
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -473,13 +580,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7001807539632429836}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.7, y: -1.45, z: 2}
+  m_LocalRotation: {x: -0, y: 0.6165706, z: -0, w: 0.7872997}
+  m_LocalPosition: {x: 2.041, y: -0.228, z: 2.055}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7997082749196845264}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 76.132, z: 0}
 --- !u!114 &3878571071598884698
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -507,7 +614,7 @@ GameObject:
   m_Layer: 0
   m_Name: Wind Rose Spawn Point
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -553,7 +660,7 @@ GameObject:
   m_Layer: 0
   m_Name: Statue Spawn Point (2)
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -566,7 +673,7 @@ Transform:
   m_GameObject: {fileID: 8050795738101290554}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.5, y: -0.4, z: 3.5}
+  m_LocalPosition: {x: -2.3, y: -0.38, z: 3.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -599,7 +706,7 @@ GameObject:
   m_Layer: 0
   m_Name: Wind Rose Spawn Point (1)
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1

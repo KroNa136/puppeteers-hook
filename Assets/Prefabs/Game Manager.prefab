@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5788094999068221788}
   - component: {fileID: 2841073785055137940}
   - component: {fileID: 4717413841104859222}
+  - component: {fileID: 7830771335501268719}
   m_Layer: 0
   m_Name: Game Manager
   m_TagString: Untagged
@@ -67,4 +68,16 @@ MonoBehaviour:
   syncInterval: 0
   _ghostSpawnAfterTime: 5
   _ghostPrepareTime: 60
-  _mainGameTime: 600
+  _mainGameTime: 900
+--- !u!114 &7830771335501268719
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2283940226407256836}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ec9ef3dff752ca4199af140571ea897, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AlwaysVisible

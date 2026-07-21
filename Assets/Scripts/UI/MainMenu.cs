@@ -8,9 +8,18 @@ public class MainMenu : Menu
     [SerializeField] private JoinGameMenu _joinGameMenu;
     [SerializeField] private SettingsMenu _settingsMenu;
 
+    [SerializeField] private StatusText _gameStatusText;
+
     protected override void OnStart()
     {
         Cursor.lockState = CursorLockMode.None;
+
+        SessionManager.OnFailedToSignIn.AddListener(OnFailedToSignIn);
+    }
+
+    private void OnFailedToSignIn()
+    {
+        _gameStatusText.SetError("Произошла ошибка при подключении к Unity Services. Проверьте соединение и перезапустите игру.");
     }
 
     public void CreateGame()

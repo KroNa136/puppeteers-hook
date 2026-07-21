@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class InteractionManager : NetworkBehaviour
 {
-    [SerializeField] private PlayerAudioController _audioController;
+    [SerializeField] private InvestigatorAudioController _audioController;
 
     private GameHud _gameHud;
     private Transform _cameraRoot;
@@ -77,7 +77,7 @@ public class InteractionManager : NetworkBehaviour
 
         if (Physics.Raycast(origin: _cameraRoot.position, direction: _cameraRoot.forward, out _hit, _maxDistance, _layerMask, QueryTriggerInteraction.Ignore) &&
             _hit.collider != null &&
-            (_hit.collider.TryGetComponent(out Interactable interactable) || _hit.collider.TryGetComponentInParent(out interactable)) &&
+            (_hit.collider.TryGetComponent(out Interactable interactable) || _hit.collider.TryGetComponentInParent(out interactable) || _hit.collider.TryGetComponentInSecondParent(out interactable)) &&
             interactable.isActiveAndEnabled &&
             interactable.IsAuthorizedToInteract(PlayerData.Local.Role))
         {
@@ -114,7 +114,7 @@ public class InteractionManager : NetworkBehaviour
 
         if (!Physics.Raycast(origin: _cameraRoot.position, direction: _cameraRoot.forward, out _hit, _maxDistance, _layerMask, QueryTriggerInteraction.Ignore) ||
             _hit.collider == null ||
-            !(_hit.collider.TryGetComponent(out Interactable interactable) || _hit.collider.TryGetComponentInParent(out interactable)) ||
+            !(_hit.collider.TryGetComponent(out Interactable interactable) || _hit.collider.TryGetComponentInParent(out interactable) || _hit.collider.TryGetComponentInSecondParent(out interactable)) ||
             !interactable.isActiveAndEnabled ||
             target != interactable)
         {

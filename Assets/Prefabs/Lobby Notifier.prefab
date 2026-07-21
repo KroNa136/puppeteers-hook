@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6064527592264070024}
   - component: {fileID: 8998622971002831091}
   - component: {fileID: 5676622110128057304}
+  - component: {fileID: 5696036453872999759}
   m_Layer: 0
   m_Name: Lobby Notifier
   m_TagString: Untagged
@@ -65,3 +66,15 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
+--- !u!114 &5696036453872999759
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9158094352487166045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ec9ef3dff752ca4199af140571ea897, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AlwaysVisible

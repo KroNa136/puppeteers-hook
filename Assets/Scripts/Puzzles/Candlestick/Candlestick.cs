@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Mirror;
 using UnityEngine;
 using UnityEngine.Events;
@@ -6,10 +7,10 @@ public class Candlestick : NetworkBehaviour
 {
     public UnityEvent OnServerExtinguished = new();
 
-    [SerializeField] private Renderer _litRenderer;
-    [SerializeField] private Renderer _extinguishedRenderer;
+    [SerializeField] private List<Renderer> _litRenderers;
+    [SerializeField] private List<Renderer> _extinguishedRenderers;
     [SerializeField] private Light _light;
-    // [SerializeField] private CandlestickAudioController _audioController;
+    [SerializeField] private CandlestickAudioController _audioController;
 
     [SyncVar(hook = nameof(OnClientIsLitChanged))]
     public bool IsLit;
@@ -63,11 +64,14 @@ public class Candlestick : NetworkBehaviour
         if (oldValue == newValue)
             return;
 
-        _litRenderer.enabled = newValue;
-        _extinguishedRenderer.enabled = !newValue;
+        foreach (var renderer in _litRenderers)
+            renderer.enabled = newValue;
+
+        foreach (var renderer in _extinguishedRenderers)
+            renderer.enabled = !newValue;
 
         _ = _light.Bind(l => l.enabled = newValue);
 
-        // _ = _audioController.Bind(newValue ? c => c.PlayPutOutSound() : c => c.PlayLightSound());
+        _ = _audioController.Bind(newValue ? c => c.PlayLightSound() : c => c.PlayPutOutSound());
     }
 }

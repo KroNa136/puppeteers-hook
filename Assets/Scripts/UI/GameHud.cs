@@ -10,6 +10,12 @@ public class GameHud : Menu
     [Space]
 
     [SerializeField] private StatusText _gameTimerText;
+    [SerializeField] private StatusText _gameTimeDecreaseText;
+    [SerializeField] private Animator _gameTimeDecreaseAnimator;
+
+    [Space]
+
+    [SerializeField] private Image _characterImage;
 
     [Space]
 
@@ -36,6 +42,7 @@ public class GameHud : Menu
     [Space]
 
     [SerializeField] private GameObject _investigatorAmuletIcon;
+    [SerializeField] private Animator _investigatorAmuletAnimator;
 
     [Space]
 
@@ -64,6 +71,11 @@ public class GameHud : Menu
 
     [Space]
 
+    [SerializeField] private Sprite _ghostSprite;
+    [SerializeField] private Sprite _investigatorSprite;
+
+    [Space]
+
     [SerializeField] private Color _normalColor = new(r: 1f, g: 1f, b: 1f, a: 1f);
     [SerializeField] private Color _mutedColor = new(r: 0.75f, g: 0.75f, b: 0.75f, a: 1f);
     [SerializeField] private Color _criticalColor = new(r: 1f, g: 0f, b: 0f, a: 1f);
@@ -71,6 +83,7 @@ public class GameHud : Menu
     protected override void OnStart()
     {
         GameManager.OnClientTimerUpdated.AddListener(SetGameTime);
+        GameManager.OnClientGameTimeDecreased.AddListener(AnimateGameTimeDecrease);
 
         _crosshair.SetActive(false);
         _investigatorFlashlightChargeBar.SetActive(false);
@@ -88,6 +101,25 @@ public class GameHud : Menu
         int leftoverSeconds = seconds % 60;
 
         _gameTimerText.SetMessage($"{minutes}:{leftoverSeconds:00}");
+    }
+
+    private void AnimateGameTimeDecrease(int seconds)
+    {
+        _gameTimeDecreaseText.SetError($"-{seconds}");
+        _gameTimeDecreaseAnimator.SetTrigger("DecreaseTime");
+    }
+
+    public void SetCharacterIcon(PlayerRole role)
+    {
+        _characterImage.sprite = role switch
+        {
+            PlayerRole.Ghost => _ghostSprite,
+            PlayerRole.Investigator => _investigatorSprite,
+            _ => null
+        };
+
+        if (role is not PlayerRole.Ghost and not PlayerRole.Investigator)
+            _characterImage.color = new Color(r: 1f, g: 1f, b: 1f, a: 0f);
     }
 
     public void SetCrosshair(bool enabled)
@@ -142,7 +174,6 @@ public class GameHud : Menu
 
     public void SetInvestigatorAmulet(bool hasAmulet)
     {
-        // TODO: effects, tutorial
         _investigatorAmuletIcon.SetActive(hasAmulet);
     }
 
@@ -151,7 +182,7 @@ public class GameHud : Menu
         if (!_investigatorAmuletIcon.activeInHierarchy)
             return;
 
-        // TODO: animator and shaking animation
+        _investigatorAmuletAnimator.SetTrigger("Shake");
     }
 
     public void InitializeGhostStaminaBar(float maxStamina)

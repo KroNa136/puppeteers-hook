@@ -15,7 +15,8 @@ public abstract class GhostAbility : NetworkBehaviour
     [SerializeField] private GhostAbilityData _data;
     public GhostAbilityData Data => _data;
 
-    //[SerializeField] private GhostAudioController _audioController;
+    [SerializeField] protected GhostAudioController _audioController;
+    protected NetworkAnimator _animator;
 
     [Space]
 
@@ -43,6 +44,8 @@ public abstract class GhostAbility : NetworkBehaviour
         IsCoolingDown = false;
         CanBeActivated = true;
 
+        _ = TryGetComponent(out _animator);
+
         _timer = GameManager.Instance.ServerSpawnNetworkTimer();
     }
 
@@ -58,6 +61,12 @@ public abstract class GhostAbility : NetworkBehaviour
     [Client]
     public void OnClientIsActivatedChanged(bool oldValue, bool newValue)
     {
+        if (!isClient)
+            return;
+
+        if (newValue)
+            PlayActivationSound();
+
         if (!isLocalPlayer)
             return;
 
@@ -69,9 +78,13 @@ public abstract class GhostAbility : NetworkBehaviour
             OnActivated.Invoke();
             _ = _gameHud.Bind(hud => hud.SpawnGhostAbilityPopup(this));
         }
-
-        // _ = _audioController.Bind(newValue ? c => c.PlayAbilityActivationSound() : c => c.PlayAbilityDeactivationSound());
+        else if (_data.Duration > 0)
+        {
+            _ = _audioController.Bind(c => c.PlayAbilityDeactivationSound());
+        }
     }
+
+    protected abstract void PlayActivationSound();
 
     [Client]
     public void OnClientIsCoolingDownChanged(bool oldValue, bool newValue)
@@ -83,9 +96,14 @@ public abstract class GhostAbility : NetworkBehaviour
             return;
 
         if (newValue)
+        {
             OnStartCooldown.Invoke();
+        }
         else
+        {
             OnStopCooldown.Invoke();
+            _ = _audioController.Bind(c => c.PlayAbilityRestorationSound());
+        }
     }
 
     [Client]
@@ -120,7 +138,7 @@ public abstract class GhostAbility : NetworkBehaviour
         }
         else
         {
-            ServerDeactivate();
+            Invoke(nameof(ServerDeactivate), 0.5f);
         }
     }
 

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class InvestigatorStaminaManager : StaminaManager
 {
-    [SerializeField] private PlayerAudioController _audioController;
+    [SerializeField] private InvestigatorAudioController _audioController;
 
     private GameHud _gameHud;
 
@@ -43,6 +43,18 @@ public class InvestigatorStaminaManager : StaminaManager
     [Client]
     public override void OnClientStaminaChanged(float oldValue, float newValue)
     {
+        if (IsCriticalStamina)
+        {
+            // 1 - stamina/maxStamina = [0; 1] * (1 - (1 - critFraction)) + (1 - critFraction)
+            // [0; 1] = (1 - stamina/maxStamina - (1 - critFraction)) / (1 - (1 - critFraction))
+            float dyspneaVolume = (_criticalStaminaFraction - (newValue / _maxStamina)) / _criticalStaminaFraction;
+            _ = _audioController.Bind((controller, volume) => controller.SetDyspneaVolume(volume), dyspneaVolume);
+        }
+        else
+        {
+            _ = _audioController.Bind(c => c.SetDyspneaVolume(0f));
+        }
+
         if (!isLocalPlayer)
             return;
 
@@ -51,10 +63,5 @@ public class InvestigatorStaminaManager : StaminaManager
             (hud, stamina, maxStamina, isCriticalStamina) => hud.SetInvestigatorStamina(stamina, maxStamina, isCriticalStamina),
             newValue, _maxStamina, IsCriticalStamina
         );
-
-        // 1 - stamina/maxStamina = [0; 1] * (1 - (1 - critFraction)) + (1 - critFraction)
-        // [0; 1] = (1 - stamina/maxStamina - (1 - critFraction)) / (1 - (1 - critFraction))
-        float dyspneaVolume = (_criticalStaminaFraction - (newValue / _maxStamina)) / _criticalStaminaFraction;
-        _ = _audioController.Bind((controller, volume) => controller.SetDyspneaSoundVolume(volume), dyspneaVolume);
     }
 }

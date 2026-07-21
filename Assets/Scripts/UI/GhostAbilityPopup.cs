@@ -8,8 +8,8 @@ public class GhostAbilityPopup : MonoBehaviour
 
     [Space]
 
-    [SerializeField] private Color _activatedColor = new(r: 1f, g: 1f, b: 1f, a: 1f);
-    [SerializeField] private Color _coolingDownColor = new(r: 0.75f, g: 0.75f, b: 0.75f, a: 1f);
+    [SerializeField] private Color _activatedColor = new(r: 0.9f, g: 0.9f, b: 0.9f, a: 1f);
+    [SerializeField] private Color _coolingDownColor = new(r: 0.5f, g: 0.5f, b: 0.5f, a: 0.5f);
 
     private bool _isCoolingDown;
 

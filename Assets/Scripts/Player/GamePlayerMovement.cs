@@ -8,11 +8,14 @@ using UnityEngine.InputSystem;
 public abstract class GamePlayerMovement : NetworkBehaviour
 {
     [SerializeField] protected Transform _cameraRoot;
-    //[SerializeField] protected PlayerAudioController _audioController;
+    [SerializeField] protected GamePlayerAudioController _audioController;
 
     protected CharacterController _controller;
     protected InputManager _inputManager;
     protected CameraController _cameraController;
+    protected NetworkAnimator _animator;
+
+    protected GameHud _gameHud;
 
     [Space]
 
@@ -26,9 +29,6 @@ public abstract class GamePlayerMovement : NetworkBehaviour
     protected bool _wasGrounded;
     protected bool _isGrounded;
     protected Collider[] _groundOverlaps;
-
-    protected PhysicsMaterial _previousPhysicsMaterial;
-    protected PhysicsMaterial _currentPhysicsMaterial;
 
     [Space]
 
@@ -54,14 +54,22 @@ public abstract class GamePlayerMovement : NetworkBehaviour
     protected readonly Queue<PlayerStateData> _stateBuffer = new();
 
     protected float _tickRate = 1f / 30f;
+    private int _lastReceivedTick;
 
     protected Vector3 _previousSimulatedPosition;
     protected Vector3 _currentSimulatedPosition;
     protected float _motionInterpolationTimer;
 
-    protected bool _isCorrectingPositionError;
-    protected float _positionErrorCorrectionTimer;
-    protected Vector3 _positionError;
+    [Space]
+
+    [SerializeField] protected float _speedForMinWindVolume = 2f;
+    [SerializeField] protected float _speedForMaxWindVolume = 6f;
+
+    protected abstract float FootstepInterval { get; }
+
+    protected float _clientFootstepTimer;
+    protected float _serverFootstepTimer;
+    protected float _predictedFootstepTimer;
 
     public bool CanBeControlledByPlayer = true;
 
@@ -70,12 +78,12 @@ public abstract class GamePlayerMovement : NetworkBehaviour
         _controller = GetComponent<CharacterController>();
         _cameraController = GetComponent<CameraController>();
 
+        _ = TryGetComponent(out _animator);
+        _ = TryGetComponent(out _audioController);
+
         _wasGrounded = false;
         _isGrounded = false;
         _groundOverlaps = new Collider[20];
-
-        _previousPhysicsMaterial = null;
-        _currentPhysicsMaterial = null;
 
         _verticalSpeed = 0f;
 
@@ -83,13 +91,15 @@ public abstract class GamePlayerMovement : NetworkBehaviour
         _tickRate = tickSystem.TickRate;
         tickSystem.OnTick.AddListener(Tick);
 
+        _lastReceivedTick = 0;
+
         _previousSimulatedPosition = transform.position;
         _currentSimulatedPosition = transform.position;
         _motionInterpolationTimer = 0f;
 
-        _isCorrectingPositionError = false;
-        _positionErrorCorrectionTimer = 0f;
-        _positionError = Vector3.zero;
+        _clientFootstepTimer = 0f;
+        _serverFootstepTimer = 0f;
+        _predictedFootstepTimer = 0f;
 
         GameManager.OnClientGameOver.AddListener(OnGameOver);
 
@@ -109,6 +119,9 @@ public abstract class GamePlayerMovement : NetworkBehaviour
     {
         if (!isLocalPlayer)
             return;
+
+        _gameHud = FindAnyObjectByType<GameHud>();
+        _ = _gameHud.Bind(hud => hud.SetCharacterIcon(PlayerData.Local.Role));
 
         var childRenderers = GetComponentsInChildren<Renderer>().AsEnumerable();
 
@@ -163,7 +176,7 @@ public abstract class GamePlayerMovement : NetworkBehaviour
 
         var (horizontal, vertical, sprint, sprintReleased) = _inputManager.GetOrDefault(im => (im.Horizontal, im.Vertical, im.Sprint, im.SprintReleased));
 
-        Vector2 move = !CanBeControlledByPlayer ? Vector2.zero : new(horizontal, vertical);
+        Vector2 move = new(horizontal, vertical);
 
         PlayerInputData input = new()
         {
@@ -174,45 +187,9 @@ public abstract class GamePlayerMovement : NetworkBehaviour
             SprintReleased = sprintReleased
         };
 
-        PredictSimulation(input, Time.deltaTime);
+        PredictSimulation(input, Time.deltaTime, makeSound: true);
 
         //Debug.Log($"visually moved client to {transform.position}");
-
-        if (_isCorrectingPositionError)
-            ClientCorrectPositionError();
-    }
-
-    [Client]
-    public void ClientCorrectPositionError()
-    {
-        if (!isClient)
-            return;
-
-        if (!_smoothLocalMovement)
-            return;
-
-        if (!_smoothPositionErrorCorrection)
-            return;
-
-        if (!_isCorrectingPositionError)
-            return;
-
-        float tPrevious = Mathf.Clamp01(_positionErrorCorrectionTimer / _positionErrorCorrectionTime);
-
-        _positionErrorCorrectionTimer += Time.deltaTime;
-        float t = Mathf.Clamp01(_positionErrorCorrectionTimer / _positionErrorCorrectionTime);
-
-        float tDelta = t - tPrevious;
-        Vector3 desiredPositionDelta = tDelta * _positionError;
-        Vector3 desiredPosition = transform.position + desiredPositionDelta;
-
-        TeleportTo(desiredPosition);
-
-        if (t >= 1f)
-        {
-            _isCorrectingPositionError = false;
-            _positionError = Vector3.zero;
-        }
     }
 
     [Client]
@@ -285,7 +262,7 @@ public abstract class GamePlayerMovement : NetworkBehaviour
         }
 
         //Debug.Log($"simulating input {input.Move} from client, we are on {transform.position} and looking in the direction {look} ...");
-        Simulate(input, _tickRate);
+        Simulate(input, _tickRate, animate: false, makeSoundLocally: !_smoothLocalMovement, makeSoundOnNetwork: false);
         //Debug.Log($"finished simulating, ended up on {transform.position}");
 
         PlayerStateData state = new()
@@ -318,6 +295,13 @@ public abstract class GamePlayerMovement : NetworkBehaviour
         if (!isServer)
             return;
 
+        int tick = input.Tick;
+
+        if (tick <= _lastReceivedTick)
+            return;
+
+        _lastReceivedTick = tick;
+
         input.Move.x = Mathf.Clamp(input.Move.x, -1f, 1f);
         input.Move.y = Mathf.Clamp(input.Move.y, -1f, 1f);
 
@@ -333,7 +317,7 @@ public abstract class GamePlayerMovement : NetworkBehaviour
 
         //Debug.Log($"server tick {tick}");
 
-        if (_serverInputBuffer.Count == 0)
+        if (_serverInputBuffer.None())
         {
             //Debug.Log("input buffer is empty, cancelling server tick");
             return;
@@ -351,7 +335,7 @@ public abstract class GamePlayerMovement : NetworkBehaviour
 
             //Debug.Log($"teleported to {(isLocalPlayer ? "previous" : "current")} simulated position {transform.position}");
         }
-
+        
         PlayerInputData lastReceivedInput = new();
 
         while (_serverInputBuffer.TryDequeue(out var input))
@@ -360,7 +344,7 @@ public abstract class GamePlayerMovement : NetworkBehaviour
 
             BeforeServerSimulate(input, _tickRate);
             //Debug.Log($"simulating input {input.Move} from server, we are on {transform.position} and looking in the direction {_cameraController.Look} ...");
-            Simulate(input, _tickRate);
+            Simulate(input, _tickRate, animate: true, makeSoundLocally: false, makeSoundOnNetwork: true);
             //Debug.Log($"finished simulating, ended up on {transform.position}");
             AfterServerSimulate(input, _tickRate);
 
@@ -441,13 +425,14 @@ public abstract class GamePlayerMovement : NetworkBehaviour
             //Debug.Log($"tried to move client back to {serverState.Position}, moved to {transform.position}");
 
             _stateBuffer.Clear();
+            _stateBuffer.Enqueue(serverState);
 
             while (_clientInputBuffer.TryDequeue(out var input))
             {
                 _cameraController.SetLook(input.Look);
 
                 //Debug.Log($"resimulating input {input.Move}, we are on {transform.position} and looking in the direction {_cameraController.Look} ...");
-                Simulate(input, _tickRate);
+                Simulate(input, _tickRate, animate: false, makeSoundLocally: false, makeSoundOnNetwork: false);
                 //Debug.Log($"finished resimulating, ended up on {transform.position}");
 
                 PlayerStateData state = new()
@@ -458,15 +443,6 @@ public abstract class GamePlayerMovement : NetworkBehaviour
                 };
 
                 _stateBuffer.Enqueue(state);
-            }
-
-            if (_smoothLocalMovement && _smoothPositionErrorCorrection)
-            {
-                _isCorrectingPositionError = true;
-                _positionError = transform.position - savedPosition;
-                _positionErrorCorrectionTimer = 0f;
-
-                TeleportTo(savedPosition);
             }
 
             _cameraController.SetLook(savedLook);
@@ -530,32 +506,116 @@ public abstract class GamePlayerMovement : NetworkBehaviour
         _controller.enabled = true;
     }
 
-    private void Simulate(PlayerInputData input, float deltaTime)
+    private void Simulate(PlayerInputData input, float deltaTime, bool animate, bool makeSoundLocally, bool makeSoundOnNetwork)
     {
         _previousSimulatedPosition = _currentSimulatedPosition;
         //Debug.Log($"previuos simulated pos = {_previousSimulatedPosition}");
 
         MoveVertically(input, deltaTime);
-
         CheckGround();
-        SetPhysicsMaterial();
-        HandleLanding();
+
+        if (animate)
+            AnimateFallingAndLanding();
+
+        if (_isGrounded && !_wasGrounded)
+        {
+            if (isClient && makeSoundLocally)
+                ClientPlayLandingSound();
+
+            if (isServer && makeSoundOnNetwork)
+                RpcPlayLandingSound();
+        }
 
         Move(input, deltaTime);
 
         _currentSimulatedPosition = transform.position;
         //Debug.Log($"current simulated pos = {_currentSimulatedPosition}");
+
+        bool isMovingOnTheGround = _isGrounded && _previousSimulatedPosition != _currentSimulatedPosition;
+
+        if (isClient && makeSoundLocally)
+        {
+            if (isLocalPlayer)
+            {
+                float movementSpeed = (_currentSimulatedPosition - _previousSimulatedPosition).magnitude / deltaTime;
+                ClientSetWindVolumeFromMovementSpeed(movementSpeed);
+            }
+
+            if (isMovingOnTheGround)
+            {
+                _clientFootstepTimer += deltaTime;
+
+                if (_clientFootstepTimer >= FootstepInterval)
+                {
+                    ClientPlayFootstepSound();
+                    _clientFootstepTimer = 0f;
+                }
+            }
+            else
+            {
+                _clientFootstepTimer = 0f;
+            }
+        }
+
+        if (isServer && makeSoundOnNetwork)
+        {
+            if (isMovingOnTheGround)
+            {
+                _serverFootstepTimer += deltaTime;
+
+                if (_serverFootstepTimer >= FootstepInterval)
+                {
+                    RpcPlayFootstepSound();
+                    _serverFootstepTimer = 0f;
+                }
+            }
+            else
+            {
+                _serverFootstepTimer = 0f;
+            }
+        }
     }
 
-    private void PredictSimulation(PlayerInputData input, float deltaTime)
+    private void PredictSimulation(PlayerInputData input, float deltaTime, bool makeSound)
     {
         MoveVertically(input, deltaTime);
-
         CheckGround();
-        SetPhysicsMaterial();
-        HandleLanding();
+
+        if (_isGrounded && !_wasGrounded)
+        {
+            if (isClient && makeSound)
+                ClientPlayLandingSound();
+        }
+
+        Vector3 previousPosition = transform.position;
 
         Move(input, deltaTime);
+
+        bool isMovingOnTheGround = _isGrounded && previousPosition != transform.position;
+
+        if (isClient && makeSound)
+        {
+            if (isLocalPlayer)
+            {
+                float movementSpeed = (transform.position - previousPosition).magnitude / deltaTime;
+                ClientSetWindVolumeFromMovementSpeed(movementSpeed);
+            }
+
+            if (isMovingOnTheGround)
+            {
+                _predictedFootstepTimer += deltaTime;
+
+                if (_predictedFootstepTimer >= FootstepInterval)
+                {
+                    ClientPlayFootstepSound();
+                    _predictedFootstepTimer = 0f;
+                }
+            }
+            else
+            {
+                _predictedFootstepTimer = 0f;
+            }
+        }
     }
 
     private void CheckGround()
@@ -584,19 +644,66 @@ public abstract class GamePlayerMovement : NetworkBehaviour
         _isGrounded = overlapCountExcludingOneself > 0;
     }
 
-    private void SetPhysicsMaterial()
+    private void AnimateFallingAndLanding()
     {
-        _previousPhysicsMaterial = _currentPhysicsMaterial;
-        _currentPhysicsMaterial = _isGrounded ? _groundOverlaps[0].material : null;
+        if (!_isGrounded && _wasGrounded)
+            _ = _animator.Bind(a => a.SetTrigger("Fall"));
 
-        //if (_currentPhysicsMaterial != _previousPhysicsMaterial)
-        //    _audioController.SetMovementSounds(_currentPhysicsMaterial);
+        if (_isGrounded && !_wasGrounded)
+            _ = _animator.Bind(a => a.SetTrigger("Land"));
     }
 
-    private void HandleLanding()
+    [ClientRpc]
+    public void RpcPlayLandingSound()
     {
-        //if (_isGrounded && !_wasGrounded)
-        //    _audioController.PlayLandingSound();
+        if (isLocalPlayer)
+            return;
+
+        ClientPlayLandingSound();
+    }
+
+    [Client]
+    public void ClientPlayLandingSound()
+    {
+        if (!isClient)
+            return;
+
+        _ = _audioController.Bind(c => c.PlayLandingSound());
+    }
+
+    [ClientRpc]
+    public void RpcPlayFootstepSound()
+    {
+        if (isLocalPlayer)
+            return;
+
+        ClientPlayFootstepSound();
+    }
+
+    [Client]
+    public void ClientPlayFootstepSound()
+    {
+        if (!isClient)
+            return;
+
+        _ = _audioController.Bind(c => c.PlayFootstepSound());
+    }
+
+    [Client]
+    public void ClientSetWindVolumeFromMovementSpeed(float movementSpeed)
+    {
+        if (!isLocalPlayer)
+            return;
+
+        float clampedMovementSpeed = Mathf.Clamp
+        (
+            value: movementSpeed,
+            min: _speedForMinWindVolume,
+            max: _speedForMaxWindVolume
+        );
+
+        float windVolume = (clampedMovementSpeed - _speedForMinWindVolume) / (_speedForMaxWindVolume - _speedForMinWindVolume);
+        _ = _audioController.Bind((controller, volume) => controller.SetWindVolume(volume), windVolume);
     }
 
     protected virtual void OnStart() { }

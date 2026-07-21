@@ -5,6 +5,8 @@ public class NoteCollection
 {
     public List<string> LoreTexts = new();
     public string CandlesticksPuzzleText = string.Empty;
+    public string HoldablesPuzzleText = string.Empty;
     public string StatuesPuzzleText = string.Empty;
     public string RotatingMirrorsPuzzleText = string.Empty;
+    public string ClocksPuzzleText = string.Empty;
 }

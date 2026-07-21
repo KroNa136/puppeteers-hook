@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
@@ -10,10 +11,10 @@ public class CandlesticksPuzzle : Puzzle
     public override bool IsInValidState => isServer && _spawnedCandlesticks.None(c => c.IsLit);
 
     [Server]
-    public override void OnServerInitialize()
+    public override IEnumerator OnServerInitialize()
     {
         if (!isServer)
-            return;
+            yield break;
 
         var spawnPoints = GetComponentsInChildren<SpawnPoint>();
         var candlestickSpawnPoints = spawnPoints.Where(sp => sp.Type is SpawnPointType.Candlestick).Select(sp => sp.transform);
@@ -23,11 +24,14 @@ public class CandlesticksPuzzle : Puzzle
         {
             var candlestick = WorldGenerator.Instance.ServerSpawnCandlestick(candlestickSpawnPoint.position, candlestickSpawnPoint.rotation);
             _spawnedCandlesticks.Add(candlestick);
-            candlestick.OnServerExtinguished.AddListener(ServerValidate);
+            candlestick.OnServerExtinguished.AddListener(() => StartCoroutine(ServerValidate()));
+
+            yield return new WaitForSeconds(0.3f);
         }
 
         var noteSpawnPoint = noteSpawnPoints.UnityRandomItem();
         var note = WorldGenerator.Instance.ServerSpawnNote(noteSpawnPoint.position, noteSpawnPoint.rotation);
+        yield return new WaitForSeconds(0.3f);
         note.ServerSetCandlesticksPuzzleText();
     }
 }

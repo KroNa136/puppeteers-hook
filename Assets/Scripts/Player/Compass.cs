@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Linq;
 using Mirror;
 using UnityEngine;
@@ -24,7 +25,7 @@ public class Compass : NetworkBehaviour
 
         HasTarget = false;
 
-        GameManager.OnServerMainPhaseStarted.AddListener(ServerSetTarget);
+        GameManager.OnServerMainPhaseStarted.AddListener(() => StartCoroutine(ServerSetTargetAfterDelay()));
         TickSystem.Instance.OnTick.AddListener(ServerTick);
     }
 
@@ -35,6 +36,17 @@ public class Compass : NetworkBehaviour
             return;
 
         _gameHud = FindAnyObjectByType<GameHud>();
+    }
+
+    [Server]
+    public IEnumerator ServerSetTargetAfterDelay()
+    {
+        if (!isServer)
+            yield break;
+
+        yield return new WaitForSeconds(2f);
+
+        ServerSetTarget();
     }
 
     [Server]
@@ -158,7 +170,7 @@ public class Compass : NetworkBehaviour
         _ = _gameHud.Bind(newValue ? hud => hud.EnableCompass() : hud => hud.DisableCompass());
     }
 
-    [ClientRpc]
+    [ClientRpc(channel = Channels.Unreliable)]
     public void RpcUpdateCompass(float horizontalAngleToTarget, bool targetIsAtDifferentHeight)
     {
         if (isServer || !isLocalPlayer)

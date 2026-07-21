@@ -16,8 +16,8 @@ public class GhostAbilityCard : MonoBehaviour
 
     [Space]
 
-    [SerializeField] private Color _availableColor = new(r: 1f, g: 1f, b: 1f, a: 1f);
-    [SerializeField] private Color _unavailableColor = new(r: 0.75f, g: 0.75f, b: 0.75f, a: 1f);
+    [SerializeField] private Color _availableColor = new(r: 0.9f, g: 0.9f, b: 0.9f, a: 1f);
+    [SerializeField] private Color _unavailableColor = new(r: 0.5f, g: 0.5f, b: 0.5f, a: 0.5f);
 
     private GhostAbility _linkedAbility;
 
@@ -28,8 +28,8 @@ public class GhostAbilityCard : MonoBehaviour
         var data = ability.Data;
         string name = data.Name;
         string description = data.Description;
-        string duration = $"Длительность: {(data.Duration > 0 ? $"{data.Duration} секунд" : "-")}";
-        string cooldown = $"Восстановление: {data.Cooldown} секунд";
+        string duration = $"Длительность:\n{(data.Duration > 0 ? $"{data.Duration} секунд" : "-")}";
+        string cooldown = $"Восстановление:\n{data.Cooldown} секунд";
 
         _ = data.Icon.Bind((i, image) => image.sprite = i, _icon);
 

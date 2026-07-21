@@ -12,9 +12,17 @@ public class InvestigatorPlayerMovement : GamePlayerMovement
     [SerializeField] private float _walkingSpeed = 1.5f;
     [SerializeField] private float _runningSpeed = 3f;
 
+    [Space]
+
+    [SerializeField] private float _walkingFootstepInterval = 0.4f;
+    [SerializeField] private float _runningFootstepInterval = 0.2f;
+
+    protected override float FootstepInterval => _isRunning ? _runningFootstepInterval : _walkingFootstepInterval;
+
     private InvestigatorStaminaManager _staminaManager;
 
     private bool CanRun => !_staminaManager.IsCriticalStamina || !StoppedSprintingAtCriticalStamina;
+    private bool _isRunning = false;
 
     protected override void OnStart()
     {
@@ -32,21 +40,32 @@ public class InvestigatorPlayerMovement : GamePlayerMovement
         StoppedSprintingAtCriticalStamina = false;
     }
 
+    [Server]
     protected override void BeforeServerSimulate(PlayerInputData input, float deltaTime)
     {
+        if (!isServer)
+            return;
+
         StoppedSprintingAtCriticalStamina = StoppedSprintingAtCriticalStamina
             ? _staminaManager.IsCriticalStamina
             : _staminaManager.CurrentStamina == 0f || (_staminaManager.IsCriticalStamina && input.SprintReleased);
     }
 
+    [Server]
     protected override void AfterServerSimulate(PlayerInputData input, float deltaTime)
     {
-        bool isMoving = input.Move.sqrMagnitude > 0.001f;
+        if (!isServer)
+            return;
 
-        if (isMoving && input.Sprint && CanRun)
-            _staminaManager.ServerDrain(deltaTime);
-        else
-            _staminaManager.ServerRegenerate(deltaTime, isMoving);
+        bool isMoving = input.Move.sqrMagnitude > 0.001f;
+        _isRunning = input.Sprint && CanRun;
+
+        _ = isMoving && _isRunning
+            ? _staminaManager.Bind((sm, dt) => sm.ServerDrain(dt), deltaTime)
+            : _staminaManager.Bind((sm, dt, isMoving) => sm.ServerRegenerate(dt, isMoving), deltaTime, isMoving);
+
+        int moveMode = isMoving ? (_isRunning ? 2 : 1) : 0;
+        _ = _animator.Bind(a => a.animator.SetInteger("MoveMode", moveMode));
     }
 
     protected override void MoveVertically(PlayerInputData input, float deltaTime)
@@ -65,10 +84,8 @@ public class InvestigatorPlayerMovement : GamePlayerMovement
 
     protected override void Move(PlayerInputData input, float deltaTime)
     {
-        //bool isRunning = input.Sprint && _staminaManager.CurrentStamina > 0f;
-
-        bool isRunning = input.Sprint && CanRun;
-        float speed = isRunning ? _runningSpeed : _walkingSpeed;
+        _isRunning = input.Sprint && CanRun;
+        float speed = _isRunning ? _runningSpeed : _walkingSpeed;
 
         Vector3 clampedMove = Vector3.ClampMagnitude(transform.right * input.Move.x + transform.forward * input.Move.y, 1f);
 
@@ -90,54 +107,4 @@ public class InvestigatorPlayerMovement : GamePlayerMovement
 
         return new Vector2(rightProjection, forwardProjection) / (speed * deltaTime);
     }
-
-    /*
-    private void HandleHorizontalMovement()
-    {
-        float horizontal = _inputManager.Horizontal;
-        float vertical = _inputManager.Vertical;
-
-        Vector3 move = Vector3.ClampMagnitude(transform.right * horizontal + transform.forward * vertical, 1f);
-
-        if (_inputManager.Sprint && !_stoppedRunning && _staminaManager.stamina > 0)
-        {
-            if (_isGrounded)
-            {
-                _currentSpeed = _runningSpeed;
-                _isRunning = true;
-            }
-            else if(!_isRunning)
-            {
-                _currentSpeed = _walkingSpeed;
-            }
-        }
-        else
-        {
-            if (_isRunning)
-            {
-                _isRunning = false;
-                _stoppedRunning = true;
-            }
-
-            _currentSpeed = _walkingSpeed;
-        }
-
-        if (!_inputManager.Sprint && !_staminaManager.IsCriticalStamina)
-            _stoppedRunning = false;
-
-        if (_isGrounded && move.magnitude > 0f)
-        {
-            if (_isRunning)
-                headBobController.Run();
-            else
-                headBobController.Walk();
-        }
-        else
-        {
-            headBobController.Reset();
-        }
-
-        _controller.Move(_currentSpeed * Time.deltaTime * move);
-    }
-    */
 }

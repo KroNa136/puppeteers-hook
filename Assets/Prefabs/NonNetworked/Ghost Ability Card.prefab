@@ -66,18 +66,18 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435:
-    30 \u0441\u0435\u043A\u0443\u043D\u0434"
+  m_text: "\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435:\n30
+    \u0441\u0435\u043A\u0443\u043D\u0434"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5d136e38d0e5a2948870022afea4d33d, type: 2}
+  m_sharedMaterial: {fileID: 5131970225308976735, guid: 5d136e38d0e5a2948870022afea4d33d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4293322470
+  m_fontColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -100,7 +100,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -151,10 +151,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51d02eb0cd3c4b4499a5cb4b447f27b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StatusText
-  _normalColor: {r: 1, g: 1, b: 1, a: 1}
-  _errorColor: {r: 1, g: 0, b: 0, a: 1}
-  _successColor: {r: 0, g: 1, b: 0, a: 1}
-  _disabledColor: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+  _normalColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  _errorColor: {r: 0.8, g: 0.44705883, b: 0.4117647, a: 1}
+  _successColor: {r: 0.58431375, g: 0.8, b: 0.53333336, a: 1}
+  _disabledColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
   _text: {fileID: 456884864644015392}
 --- !u!1 &64977084636451472
 GameObject:
@@ -228,8 +228,8 @@ MonoBehaviour:
   _descriptionText: {fileID: 7006594291282593231}
   _durationText: {fileID: 5645215894490655220}
   _cooldownText: {fileID: 5891356627742813449}
-  _availableColor: {r: 1, g: 1, b: 1, a: 1}
-  _unavailableColor: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+  _availableColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  _unavailableColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
 --- !u!1 &1633788132044032233
 GameObject:
   m_ObjectHideFlags: 0
@@ -298,15 +298,15 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u0411\u043B\u043E\u043A\u0438\u0440\u043E\u0432\u043A\u0430 \u0434\u0432\u0435\u0440\u0435\u0439"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5d136e38d0e5a2948870022afea4d33d, type: 2}
+  m_sharedMaterial: {fileID: 5131970225308976735, guid: 5d136e38d0e5a2948870022afea4d33d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4293322470
+  m_fontColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -329,7 +329,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -380,10 +380,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51d02eb0cd3c4b4499a5cb4b447f27b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StatusText
-  _normalColor: {r: 1, g: 1, b: 1, a: 1}
-  _errorColor: {r: 1, g: 0, b: 0, a: 1}
-  _successColor: {r: 0, g: 1, b: 0, a: 1}
-  _disabledColor: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+  _normalColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  _errorColor: {r: 0.8, g: 0.44705883, b: 0.4117647, a: 1}
+  _successColor: {r: 0.58431375, g: 0.8, b: 0.53333336, a: 1}
+  _disabledColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
   _text: {fileID: 6325591729444699884}
 --- !u!1 &2551699209425031312
 GameObject:
@@ -451,18 +451,18 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u0414\u043B\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0441\u0442\u044C:
-    30 \u0441\u0435\u043A\u0443\u043D\u0434"
+  m_text: "\u0414\u043B\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0441\u0442\u044C:\n30
+    \u0441\u0435\u043A\u0443\u043D\u0434"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5d136e38d0e5a2948870022afea4d33d, type: 2}
+  m_sharedMaterial: {fileID: 5131970225308976735, guid: 5d136e38d0e5a2948870022afea4d33d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4293322470
+  m_fontColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -485,7 +485,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -536,10 +536,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51d02eb0cd3c4b4499a5cb4b447f27b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StatusText
-  _normalColor: {r: 1, g: 1, b: 1, a: 1}
-  _errorColor: {r: 1, g: 0, b: 0, a: 1}
-  _successColor: {r: 0, g: 1, b: 0, a: 1}
-  _disabledColor: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+  _normalColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  _errorColor: {r: 0.8, g: 0.44705883, b: 0.4117647, a: 1}
+  _successColor: {r: 0.58431375, g: 0.8, b: 0.53333336, a: 1}
+  _disabledColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
   _text: {fileID: 1237020974336472994}
 --- !u!1 &6460030355308693468
 GameObject:
@@ -599,7 +599,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.9, g: 0.9, b: 0.9, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -628,6 +628,7 @@ GameObject:
   - component: {fileID: 5965299367094710912}
   - component: {fileID: 1121023426016142533}
   - component: {fileID: 5676767694309034894}
+  - component: {fileID: 1600106363966510610}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -675,15 +676,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.5019608}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 0}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -713,13 +714,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_NormalColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+    m_HighlightedColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+    m_PressedColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+    m_SelectedColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+    m_DisabledColor: {r: 0.6, g: 0.6, b: 0.6, a: 0.5019608}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.1
+    m_FadeDuration: 0.01
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -748,6 +749,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &1600106363966510610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7333701464612064177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ef4565517f3a8d4db0b3bb5608fb0f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButton
 --- !u!1 &7582221182162657899
 GameObject:
   m_ObjectHideFlags: 0
@@ -819,15 +832,15 @@ MonoBehaviour:
     \u0432 \u043A\u043E\u043C\u043D\u0430\u0442\u0435, \u0433\u0434\u0435 \u0432\u044B
     \u043D\u0430\u0445\u043E\u0434\u0438\u0442\u0435\u0441\u044C."
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5d136e38d0e5a2948870022afea4d33d, type: 2}
+  m_sharedMaterial: {fileID: 5131970225308976735, guid: 5d136e38d0e5a2948870022afea4d33d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4293322470
+  m_fontColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -850,7 +863,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -901,8 +914,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51d02eb0cd3c4b4499a5cb4b447f27b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StatusText
-  _normalColor: {r: 1, g: 1, b: 1, a: 1}
-  _errorColor: {r: 1, g: 0, b: 0, a: 1}
-  _successColor: {r: 0, g: 1, b: 0, a: 1}
-  _disabledColor: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+  _normalColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  _errorColor: {r: 0.8, g: 0.44705883, b: 0.4117647, a: 1}
+  _successColor: {r: 0.58431375, g: 0.8, b: 0.53333336, a: 1}
+  _disabledColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5019608}
   _text: {fileID: 7195945616554178949}

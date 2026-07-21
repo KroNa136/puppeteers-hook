@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
@@ -11,10 +12,10 @@ public class RotatingMirrorsPuzzle : Puzzle
     public override bool IsInValidState => isServer && _spawnedReflectableLightTarget.IsHit;
 
     [Server]
-    public override void OnServerInitialize()
+    public override IEnumerator OnServerInitialize()
     {
         if (!isServer)
-            return;
+            yield break;
 
         var spawnPoints = GetComponentsInChildren<SpawnPoint>();
         var reflectableLightSourceSpawnPoints = spawnPoints.Where(sp => sp.Type is SpawnPointType.ReflectableLightSource).Select(sp => sp.transform);
@@ -25,8 +26,12 @@ public class RotatingMirrorsPuzzle : Puzzle
         var reflectableLightSourceSpawnPoint = reflectableLightSourceSpawnPoints.UnityRandomItem();
         _ = WorldGenerator.Instance.ServerSpawnReflectableLightSource(reflectableLightSourceSpawnPoint.position, reflectableLightSourceSpawnPoint.rotation);
 
+        yield return new WaitForSeconds(0.3f);
+
         var reflectableLightTargetSpawnPoint = reflectableLightTargetSpawnPoints.UnityRandomItem();
         _spawnedReflectableLightTarget = WorldGenerator.Instance.ServerSpawnReflectableLightTarget(reflectableLightTargetSpawnPoint.position, reflectableLightTargetSpawnPoint.rotation);
+
+        yield return new WaitForSeconds(0.3f);
 
         float rotatingMirrorRotationAngleDelta = LobbyNetworkManager.Instance.RotatingMirrorPrefab.GetComponent<RotatingMirror>().RotationAngleDelta;
 
@@ -46,22 +51,28 @@ public class RotatingMirrorsPuzzle : Puzzle
 
             var rotatingMirror = WorldGenerator.Instance.ServerSpawnRotatingMirror(spawnPoint.position, spawnPoint.rotation);
             _spawnedRotatingMirrors.Add(rotatingMirror);
-            rotatingMirror.OnServerFinishedRotation.AddListener(ServerValidate);
+            rotatingMirror.OnServerFinishedRotation.AddListener(() => StartCoroutine(ServerValidate()));
+
+            yield return new WaitForSeconds(0.3f);
         }
 
         var noteSpawnPoint = noteSpawnPoints.UnityRandomItem();
         var note = WorldGenerator.Instance.ServerSpawnNote(noteSpawnPoint.position, noteSpawnPoint.rotation);
+        yield return new WaitForSeconds(0.3f);
         note.ServerSetRotatingMirrorsPuzzleText();
     }
 
     [Server]
-    public override void BeforeServerLinkedDoorsUnlock()
+    public override IEnumerator BeforeServerLinkedDoorsUnlock()
     {
         if (!isServer)
-            return;
+            yield break;
 
         foreach (var rotatingMirror in _spawnedRotatingMirrors)
+        {
             rotatingMirror.ServerDisableInteraction();
+            yield return new WaitForSeconds(0.3f);
+        }
     }
 
     private float GetRandomRotationAngle(int stateCount, float rotationAngleDelta)

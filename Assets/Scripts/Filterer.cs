@@ -16,7 +16,6 @@ public class Filterer : MonoBehaviour
     [Header("References")]
 
     [SerializeField] HDRenderPipelineAsset hdrpAsset;
-    [SerializeField] FPSLimiter fpsLimiter;
     [SerializeField] Camera playerCamera;
     [SerializeField] RawImage cameraView;
     [SerializeField] Image colorFilter;
@@ -26,20 +25,14 @@ public class Filterer : MonoBehaviour
 
     [SerializeField] FiltererMode currentMode = FiltererMode.Realistic;
 
-    [Header("Realistic Mode")]
-
-    [SerializeField] int maxFPS_realistic = 60;
-
     [Header("Retro Mode")]
 
     [SerializeField] RenderTexture renderTexture_retro;
-    [SerializeField] int maxFPS_retro = 50;
     [SerializeField] float resolutionScale_retro = 0.6f;
 
     [Header("Old Mode")]
 
     [SerializeField] RenderTexture renderTexture_old;
-    [SerializeField] int maxFPS_old = 24;
     [SerializeField] float resolutionScale_old = 0.4f;
 
     FiltererMode previousMode;
@@ -50,7 +43,6 @@ public class Filterer : MonoBehaviour
         {
             case FiltererMode.Realistic:
                 //fpsLimiter.limitFPS = false;
-                fpsLimiter.maxFPS = maxFPS_realistic;
                 playerCamera.targetTexture = null;
                 cameraView.texture = null;
                 cameraView.gameObject.SetActive(false);
@@ -58,7 +50,6 @@ public class Filterer : MonoBehaviour
                 break;
             case FiltererMode.Retro:
                 //fpsLimiter.limitFPS = true;
-                fpsLimiter.maxFPS = maxFPS_retro;
                 playerCamera.targetTexture = renderTexture_retro;
                 cameraView.texture = renderTexture_retro;
                 cameraView.gameObject.SetActive(true);
@@ -66,7 +57,6 @@ public class Filterer : MonoBehaviour
                 break;
             case FiltererMode.Old:
                 //fpsLimiter.limitFPS = true;
-                fpsLimiter.maxFPS = maxFPS_old;
                 playerCamera.targetTexture = renderTexture_old;
                 cameraView.texture = renderTexture_old;
                 cameraView.gameObject.SetActive(true);
@@ -104,8 +94,6 @@ public class Filterer : MonoBehaviour
             switch (currentMode)
             {
                 case FiltererMode.Realistic:
-                    //fpsLimiter.limitFPS = false;
-                    fpsLimiter.maxFPS = maxFPS_realistic;
                     /*
                     hdrpSettings.dynamicResolutionSettings.enabled = false;
                     renderTexture.width = Screen.width;
@@ -117,8 +105,6 @@ public class Filterer : MonoBehaviour
                     colorFilter.gameObject.SetActive(false);
                     break;
                 case FiltererMode.Retro:
-                    //fpsLimiter.limitFPS = true;
-                    fpsLimiter.maxFPS = maxFPS_retro;
                     /*
                     playerCamera.targetTexture = null;
                     hdrpSettings.dynamicResolutionSettings.enabled = true;
@@ -133,8 +119,6 @@ public class Filterer : MonoBehaviour
                     colorFilter.gameObject.SetActive(true);
                     break;
                 case FiltererMode.Old:
-                    //fpsLimiter.limitFPS = true;
-                    fpsLimiter.maxFPS = maxFPS_old;
                     /*
                     playerCamera.targetTexture = null;
                     hdrpSettings.dynamicResolutionSettings.enabled = true;

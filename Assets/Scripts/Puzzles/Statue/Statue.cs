@@ -7,7 +7,7 @@ public class Statue : NetworkBehaviour
 {
     public UnityEvent OnServerFinishedRotation = new();
 
-    // [SerializeField] private StatueAudioController _audioController;
+    [SerializeField] private StatueAudioController _audioController;
 
     [SyncVar(hook = nameof(OnClientIsRotatingChanged))]
     public bool IsRotating;
@@ -110,6 +110,24 @@ public class Statue : NetworkBehaviour
         if (oldValue == newValue)
             return;
 
-        // _ = _audioController.Bind(newValue ? c => c.PlayRotationSound() : c => c.StopRotationSound());
+        if (newValue)
+            _ = StartCoroutine(PlayRotationSoundWhileRotating());
+        else
+            _ = _audioController.Bind(c => c.PlayStopRotationSound());
+    }
+
+    [Client]
+    public IEnumerator PlayRotationSoundWhileRotating()
+    {
+        if (!isClient)
+            yield break;
+
+        while (IsRotating)
+        {
+            if (_audioController.GetOrDefault(c => !c.IsPlayingRotationSound, defaultValue: false))
+                _ = _audioController.Bind(c => c.PlayRotationSound());
+
+            yield return null;
+        }
     }
 }

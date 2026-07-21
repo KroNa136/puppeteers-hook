@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
@@ -33,10 +34,10 @@ public abstract class Puzzle : NetworkBehaviour
     }
 
     [Server]
-    public void ServerInitialize()
+    public IEnumerator ServerInitialize()
     {
         if (!isServer)
-            return;
+            yield break;
 
         int overlapCount = Physics.OverlapSphereNonAlloc
         (
@@ -51,28 +52,35 @@ public abstract class Puzzle : NetworkBehaviour
             .Take(overlapCount)
             .Select(o => o.TryGetComponent(out Room room) ? room : null)
             .NonNullItems()
+            .Select(r => r.LinkedNetworkRoom)
             .SelectMany(r => r.Doors)
             .Where(d => d.IsLocked)
             .ToList();
 
-        OnServerInitialize();
+        yield return OnServerInitialize();
     }
 
     [Server]
-    public void ServerValidate()
+    public IEnumerator ServerValidate()
     {
         if (!isServer)
-            return;
+            yield break;
 
         if (!IsInValidState)
-            return;
+            yield break;
 
-        BeforeServerLinkedDoorsUnlock();
+        yield return BeforeServerLinkedDoorsUnlock();
 
         foreach (var door in _linkedDoors)
+        {
             door.ServerUnlock();
+            yield return new WaitForSeconds(0.2f);
+        }
     }
 
-    public abstract void OnServerInitialize();
-    public virtual void BeforeServerLinkedDoorsUnlock() { }
+    public abstract IEnumerator OnServerInitialize();
+    public virtual IEnumerator BeforeServerLinkedDoorsUnlock()
+    {
+        yield return null;
+    }
 }

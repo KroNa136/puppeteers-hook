@@ -22,8 +22,7 @@ public class WorldGenerator : NetworkBehaviour
     public string WorldHash { get; private set; }
     */
 
-    private readonly List<Room> _spawnedRooms = new();
-    private readonly List<Puzzle> _spawnedPuzzles = new();
+    private readonly Dictionary<Room, NetworkRoom> _spawnedNetworkRooms = new();
 
     private void Awake()
     {
@@ -57,31 +56,35 @@ public class WorldGenerator : NetworkBehaviour
         if (!isServer)
             yield break;
 
-        _spawnedRooms.Clear();
-        _spawnedPuzzles.Clear();
+        yield return new WaitForSeconds(1f);
 
-        var spawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None)
-            .Where(sp => sp.Type is SpawnPointType.Room or
-                SpawnPointType.Puzzle or
-                SpawnPointType.Amulet or
-                SpawnPointType.Door or
-                SpawnPointType.Note or
-                SpawnPointType.PuzzleDoor or
-                SpawnPointType.InvestigatorWinTrigger)
-            .ToList();
-
-        int spawnPointCount = spawnPoints.Count;
-        int roomSpawnPointCount = spawnPoints.Count(sp => sp.Type is SpawnPointType.Room);
-        int puzzleSpawnPointCount = spawnPoints.Count(sp => sp.Type is SpawnPointType.Puzzle);
-        int totalActions = spawnPointCount + roomSpawnPointCount + puzzleSpawnPointCount;
+        int totalActions = 14;
         int completedActions = 0;
 
-        Random.State savedState = Random.state;
-        Random.InitState(_seed);
+        int seed = _seed == 0 ? Random.Range(0, 10000) : _seed;
 
-        foreach (var spawnPoint in spawnPoints)
+        Random.State savedState = Random.state;
+        Random.InitState(seed);
+
+        _spawnedNetworkRooms.Clear();
+
+        // 1. Find spawnpoints for NetworkRoom, InvestigatorWinTrigger, Door, PuzzleDoor
+
+        var networkRoomSpawnPoints = FindObjectsByType<NetworkRoomSpawnPoint>(FindObjectsSortMode.None);
+        var investigatorWinTriggerSpawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None).Where(sp => sp.Type is SpawnPointType.InvestigatorWinTrigger).ToList();
+        var doorSpawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None).Where(sp => sp.Type is SpawnPointType.Door).ToList();
+        var puzzleDoorSpawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None).Where(sp => sp.Type is SpawnPointType.PuzzleDoor).ToList();
+
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(0.3f);
+
+        // 2. Spawn network rooms
+
+        foreach (var spawnPoint in networkRoomSpawnPoints)
         {
-            if (spawnPoint.SpawnChance == 0f || spawnPoint.Type is SpawnPointType.Empty)
+            if (spawnPoint.SpawnChance == 0f)
                 continue;
 
             bool spawn = Random.value <= spawnPoint.SpawnChance;
@@ -89,83 +92,222 @@ public class WorldGenerator : NetworkBehaviour
             if (!spawn)
                 continue;
 
-            switch (spawnPoint.Type)
-            {
-                case SpawnPointType.Room:
-                    if (spawnPoint.TryGetComponent(out RoomSpawnPoint roomSpawnPoint))
-                    {
-                        var room = ServerSpawnRoom(roomSpawnPoint.RoomType, spawnPoint.transform.position, spawnPoint.transform.rotation);
-                        _spawnedRooms.Add(room);
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Spawn Point {spawnPoint.gameObject.name} with type Room is not a Room Spawn Point. The spawn point will be ignored.");
-                    }
-                    break;
+            var networkRoom = ServerSpawnNetworkRoom(spawnPoint.Room.Type, spawnPoint.transform.position, spawnPoint.transform.rotation);
+            _spawnedNetworkRooms[spawnPoint.Room] = networkRoom;
 
-                case SpawnPointType.Puzzle:
-                    if (spawnPoint.TryGetComponent(out PuzzleSpawnPoint puzzleSpawnPoint))
-                    {
-                        var puzzle = ServerSpawnPuzzle(puzzleSpawnPoint.PuzzleType, spawnPoint.transform.position, spawnPoint.transform.rotation);
-                        _spawnedPuzzles.Add(puzzle);
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Spawn Point {spawnPoint.gameObject.name} with type Puzzle is not a Puzzle Spawn Point. The spawn point will be ignored.");
-                    }
-                    break;
-
-                case SpawnPointType.Amulet:
-                    _ = ServerSpawnAmulet(spawnPoint.transform.position, spawnPoint.transform.rotation);
-                    break;
-
-                case SpawnPointType.Door:
-                    _ = ServerSpawnDoor(spawnPoint.transform.position, spawnPoint.transform.rotation);
-                    break;
-
-                case SpawnPointType.Note:
-                    _ = ServerSpawnNote(spawnPoint.transform.position, spawnPoint.transform.rotation);
-                    break;
-
-                case SpawnPointType.PuzzleDoor:
-                    var door = ServerSpawnDoor(spawnPoint.transform.position, spawnPoint.transform.rotation);
-                    door.ServerLock();
-                    break;
-
-                case SpawnPointType.InvestigatorWinTrigger:
-                    _ = ServerSpawnInvestigatorWinTrigger(spawnPoint.transform.position, spawnPoint.transform.rotation);
-                    break;
-            }
-
-            completedActions++;
-            OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
-
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.3f);
         }
 
-        foreach (var room in _spawnedRooms)
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(0.3f);
+
+        // 3. Spawn investigator win triggers
+
+        foreach (var spawnPoint in investigatorWinTriggerSpawnPoints)
         {
-            room.ServerInitialize();
+            if (spawnPoint.SpawnChance == 0f)
+                continue;
 
-            completedActions++;
-            OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+            bool spawn = Random.value <= spawnPoint.SpawnChance;
 
-            yield return new WaitForSeconds(0.1f);
+            if (!spawn)
+                continue;
+
+            _ = ServerSpawnInvestigatorWinTrigger(spawnPoint.transform.position, spawnPoint.transform.rotation);
+
+            yield return new WaitForSeconds(0.3f);
         }
 
-        foreach (var puzzle in _spawnedPuzzles)
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(0.3f);
+
+        // 4. Spawn doors
+
+        foreach (var spawnPoint in doorSpawnPoints)
         {
-            puzzle.ServerInitialize();
+            if (spawnPoint.SpawnChance == 0f)
+                continue;
 
-            completedActions++;
-            OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+            bool spawn = Random.value <= spawnPoint.SpawnChance;
 
-            yield return new WaitForSeconds(0.1f);
+            if (!spawn)
+                continue;
+
+            _ = ServerSpawnDoor(spawnPoint.transform.position, spawnPoint.transform.rotation);
+
+            yield return new WaitForSeconds(0.3f);
         }
 
-        OnGenerationProgressUpdated.Invoke(1f);
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
 
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(0.3f);
+
+        // 5. Spawn puzzle doors
+
+        foreach (var spawnPoint in puzzleDoorSpawnPoints)
+        {
+            if (spawnPoint.SpawnChance == 0f)
+                continue;
+
+            bool spawn = Random.value <= spawnPoint.SpawnChance;
+
+            if (!spawn)
+                continue;
+
+            var door = ServerSpawnDoor(spawnPoint.transform.position, spawnPoint.transform.rotation);
+            yield return new WaitForSeconds(0.3f);
+            door.ServerLock();
+
+            yield return new WaitForSeconds(0.3f);
+        }
+
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(0.3f);
+
+        // 6. Initialize spawned rooms
+
+        foreach (var kvPair in _spawnedNetworkRooms)
+        {
+            var room = kvPair.Key;
+            var networkRoom = kvPair.Value;
+            networkRoom.ServerInitialize(room);
+
+            yield return new WaitForSeconds(0.3f);
+        }
+
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(0.3f);
+
+        // 7. Find spawnpoints for Puzzle
+
+        var puzzleSpawnPoints = FindObjectsByType<PuzzleSpawnPoint>(FindObjectsSortMode.None);
+
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(0.3f);
+
+        // 8. Spawn and initialize puzzles
+
+        foreach (var spawnPoint in puzzleSpawnPoints)
+        {
+            var puzzle = ServerSpawnPuzzle(spawnPoint.PuzzleType, spawnPoint.transform.position, spawnPoint.transform.rotation);
+            yield return new WaitForSeconds(0.3f);
+            yield return puzzle.ServerInitialize();
+
+            // We have to wait longer here because SetText messages of puzzle notes contain texts, which make network messages larger.
+            yield return new WaitForSeconds(0.9f);
+        }
+
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(0.3f);
+
+        // 9. Find spawnpoints for CabinetDoor and Drawer
+
+        var cabinetDoorSpawnPoints = FindObjectsByType<CabinetDoorSpawnPoint>(FindObjectsSortMode.None);
+        var drawerSpawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None).Where(sp => sp.Type is SpawnPointType.Drawer);
+
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(0.3f);
+
+        // 10. Spawn cabinet doors
+
+        foreach (var spawnPoint in cabinetDoorSpawnPoints)
+        {
+            _ = ServerSpawnCabinetDoor(spawnPoint.IsLeftDoor, spawnPoint.transform.position, spawnPoint.transform.rotation);
+
+            yield return new WaitForSeconds(0.3f);
+        }
+
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(0.3f);
+
+        // 11. Spawn and initialize drawers
+
+        foreach (var spawnPoint in drawerSpawnPoints)
+        {
+            var drawer = ServerSpawnDrawer(spawnPoint.transform.position, spawnPoint.transform.rotation);
+            yield return new WaitForSeconds(0.3f);
+            yield return drawer.ServerInitialize();
+
+            yield return new WaitForSeconds(0.3f);
+        }
+
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(0.3f);
+
+        // 12. Find spawnpoints for Amulet and Note
+
+        var amuletSpawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None).Where(sp => sp.Type is SpawnPointType.Amulet).ToList();
+        var noteSpawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None).Where(sp => sp.Type is SpawnPointType.Note).ToList();
+
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(0.3f);
+
+        // 13. Spawn amulets
+
+        foreach (var spawnPoint in amuletSpawnPoints)
+        {
+            if (spawnPoint.SpawnChance == 0f)
+                continue;
+
+            bool spawn = Random.value <= spawnPoint.SpawnChance;
+
+            if (!spawn)
+                continue;
+
+            _ = ServerSpawnAmulet(spawnPoint.transform.position, spawnPoint.transform.rotation);
+
+            yield return new WaitForSeconds(0.3f);
+        }
+
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(0.3f);
+
+        // 14. Spawn notes
+
+        foreach (var spawnPoint in noteSpawnPoints)
+        {
+            if (spawnPoint.SpawnChance == 0f)
+                continue;
+
+            bool spawn = Random.value <= spawnPoint.SpawnChance;
+
+            if (!spawn)
+                continue;
+
+            var note = ServerSpawnNote(spawnPoint.transform.position, spawnPoint.transform.rotation);
+            yield return new WaitForSeconds(0.3f);
+            note.ServerSetLoreText();
+
+            yield return new WaitForSeconds(0.3f);
+        }
+
+        completedActions++;
+        OnGenerationProgressUpdated.Invoke((float) completedActions / totalActions);
+
+        yield return new WaitForSeconds(1f);
 
         Random.state = savedState;
 
@@ -189,7 +331,7 @@ public class WorldGenerator : NetworkBehaviour
     }
 
     [Server]
-    public Amulet ServerSpawnAmulet(Vector3 position, Quaternion rotation, Transform parent = null)
+    public Amulet ServerSpawnAmulet(Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
@@ -202,13 +344,34 @@ public class WorldGenerator : NetworkBehaviour
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
         return gameObj.GetComponent<Amulet>();
     }
 
     [Server]
-    public Candlestick ServerSpawnCandlestick(Vector3 position, Quaternion rotation, Transform parent = null)
+    public CabinetDoor ServerSpawnCabinetDoor(bool isLeftDoor, Vector3 position, Quaternion rotation)
+    {
+        if (!isServer)
+            return null;
+
+        var prefab = isLeftDoor
+            ? LobbyNetworkManager.Instance.LeftCabinetDoorPrefab
+            : LobbyNetworkManager.Instance.RightCabinetDoorPrefab;
+
+        if (prefab == null)
+        {
+            Debug.LogWarning($"Spawnable prefab for either Cabinet Door is not set. The object will not be spawned.");
+            return null;
+        }
+
+        var gameObj = Instantiate(prefab, position, rotation);
+        NetworkServer.Spawn(gameObj);
+        return gameObj.GetComponent<CabinetDoor>();
+    }
+
+    [Server]
+    public Candlestick ServerSpawnCandlestick(Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
@@ -221,13 +384,13 @@ public class WorldGenerator : NetworkBehaviour
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
         return gameObj.GetComponent<Candlestick>();
     }
 
     [Server]
-    public Door ServerSpawnDoor(Vector3 position, Quaternion rotation, Transform parent = null)
+    public Door ServerSpawnDoor(Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
@@ -240,13 +403,58 @@ public class WorldGenerator : NetworkBehaviour
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
         return gameObj.GetComponentInChildren<Door>();
     }
 
     [Server]
-    public InvestigatorWinTrigger ServerSpawnInvestigatorWinTrigger(Vector3 position, Quaternion rotation, Transform parent = null)
+    public Drawer ServerSpawnDrawer(Vector3 position, Quaternion rotation)
+    {
+        if (!isServer)
+            return null;
+
+        var prefab = LobbyNetworkManager.Instance.DrawerPrefab;
+
+        if (prefab == null)
+        {
+            Debug.LogWarning($"Spawnable prefab for Drawer is not set. The object will not be spawned.");
+            return null;
+        }
+
+        var gameObj = Instantiate(prefab, position, rotation);
+        NetworkServer.Spawn(gameObj);
+        return gameObj.GetComponent<Drawer>();
+    }
+
+    [Server]
+    public Holdable ServerSpawnHoldable(HoldableType type, Vector3 position, Quaternion rotation)
+    {
+        if (!isServer)
+            return null;
+
+        var prefab = type switch
+        {
+            HoldableType.Skull => LobbyNetworkManager.Instance.HoldableSkullPrefab,
+            HoldableType.Globe => LobbyNetworkManager.Instance.HoldableGlobePrefab,
+            HoldableType.Crystal => LobbyNetworkManager.Instance.HoldableCrystalPrefab,
+            HoldableType.SandClock => LobbyNetworkManager.Instance.HoldableSandClockPrefab,
+            _ => throw new System.InvalidOperationException("Unsupported holdable type encountered while spawning holdables. Make sure all holdable spawn points are set up properly.")
+        };
+
+        if (prefab == null)
+        {
+            Debug.LogWarning($"Spawnable prefab for Holdable with type {type} is not set. The object will not be spawned.");
+            return null;
+        }
+
+        var gameObj = Instantiate(prefab, position, rotation);
+        NetworkServer.Spawn(gameObj);
+        return gameObj.GetComponent<Holdable>();
+    }
+
+    [Server]
+    public InvestigatorWinTrigger ServerSpawnInvestigatorWinTrigger(Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
@@ -259,13 +467,13 @@ public class WorldGenerator : NetworkBehaviour
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
         return gameObj.GetComponent<InvestigatorWinTrigger>();
     }
 
     [Server]
-    public Note ServerSpawnNote(Vector3 position, Quaternion rotation, Transform parent = null)
+    public Note ServerSpawnNote(Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
@@ -278,17 +486,13 @@ public class WorldGenerator : NetworkBehaviour
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
-
-        var note = gameObj.GetComponent<Note>();
-        note.ServerSetLoreText();
-
-        return note;
+        return gameObj.GetComponent<Note>();
     }
 
     [Server]
-    public Puzzle ServerSpawnPuzzle(PuzzleType type, Vector3 position, Quaternion rotation, Transform parent = null)
+    public Puzzle ServerSpawnPuzzle(PuzzleType type, Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
@@ -296,8 +500,10 @@ public class WorldGenerator : NetworkBehaviour
         var prefab = type switch
         {
             PuzzleType.Candlesticks => LobbyNetworkManager.Instance.CandlesticksPuzzlePrefab,
+            PuzzleType.Holdables => LobbyNetworkManager.Instance.HoldablesPuzzlePrefab,
             PuzzleType.Statues => LobbyNetworkManager.Instance.StatuesPuzzlePrefab,
             PuzzleType.RotatingMirrors => LobbyNetworkManager.Instance.RotatingMirrorsPuzzlePrefab,
+            PuzzleType.Clocks => LobbyNetworkManager.Instance.ClocksPuzzlePrefab,
             _ => throw new System.InvalidOperationException("Unsupported puzzle type encountered while spawning puzzles. Make sure all puzzle spawn points are set up properly.")
         };
 
@@ -307,7 +513,7 @@ public class WorldGenerator : NetworkBehaviour
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
 
         var puzzle = gameObj.GetComponent<Puzzle>();
@@ -317,7 +523,7 @@ public class WorldGenerator : NetworkBehaviour
     }
 
     [Server]
-    public ReflectableLightSource ServerSpawnReflectableLightSource(Vector3 position, Quaternion rotation, Transform parent = null)
+    public ReflectableLightSource ServerSpawnReflectableLightSource(Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
@@ -330,13 +536,13 @@ public class WorldGenerator : NetworkBehaviour
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
         return gameObj.GetComponent<ReflectableLightSource>();
     }
 
     [Server]
-    public ReflectableLightTarget ServerSpawnReflectableLightTarget(Vector3 position, Quaternion rotation, Transform parent = null)
+    public ReflectableLightTarget ServerSpawnReflectableLightTarget(Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
@@ -349,48 +555,32 @@ public class WorldGenerator : NetworkBehaviour
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
         return gameObj.GetComponent<ReflectableLightTarget>();
     }
 
     [Server]
-    public Room ServerSpawnRoom(RoomType type, Vector3 position, Quaternion rotation, Transform parent = null)
+    public NetworkRoom ServerSpawnNetworkRoom(RoomType type, Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
 
-        var prefab = type switch
-        {
-            RoomType.MainHall => LobbyNetworkManager.Instance.MainHallPrefab,
-            RoomType.EmergencyExit => LobbyNetworkManager.Instance.EmergencyExitPrefab,
-            RoomType.Hall => LobbyNetworkManager.Instance.HallPrefab,
-            RoomType.LivingRoom => LobbyNetworkManager.Instance.LivingRoomPrefab,
-            RoomType.SimpleCorridor => LobbyNetworkManager.Instance.SimpleCorridorPrefab,
-            RoomType.TShapedCorridor => LobbyNetworkManager.Instance.TShapedCorridorPrefab,
-            RoomType.Stairway => LobbyNetworkManager.Instance.StairwayRoomPrefab,
-            RoomType.StatuesPuzzleRoom => LobbyNetworkManager.Instance.StatuesPuzzleRoomPrefab,
-            RoomType.RotatingMirrorsPuzzleRoom => LobbyNetworkManager.Instance.RotatingMirrorsPuzzleRoomPrefab,
-            _ => throw new System.InvalidOperationException("Unsupported room type encountered while spawning rooms. Make sure all room spawn points are set up properly.")
-        };
+        var prefab = LobbyNetworkManager.Instance.NetworkRoomPrefab;
 
         if (prefab == null)
         {
-            Debug.LogWarning($"Spawnable prefab for Room with type {type} is not set. The object will not be spawned.");
+            Debug.LogWarning($"Spawnable prefab for Network Room is not set. The object will not be spawned.");
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
-
-        var room = gameObj.GetComponent<Room>();
-        room.ServerSetType(type);
-
-        return room;
+        return gameObj.GetComponent<NetworkRoom>();
     }
 
     [Server]
-    public RotatingMirror ServerSpawnRotatingMirror(Vector3 position, Quaternion rotation, Transform parent = null)
+    public RotatingMirror ServerSpawnRotatingMirror(Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
@@ -403,13 +593,13 @@ public class WorldGenerator : NetworkBehaviour
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
         return gameObj.GetComponent<RotatingMirror>();
     }
 
     [Server]
-    public Statue ServerSpawnStatue(Vector3 position, Quaternion rotation, Transform parent = null)
+    public Statue ServerSpawnStatue(Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
@@ -422,13 +612,13 @@ public class WorldGenerator : NetworkBehaviour
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
         return gameObj.GetComponent<Statue>();
     }
 
     [Server]
-    public TimeCatcher ServerSpawnTimeCatcher(Vector3 position, Quaternion rotation, Transform parent = null)
+    public TimeCatcher ServerSpawnTimeCatcher(Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
@@ -441,13 +631,32 @@ public class WorldGenerator : NetworkBehaviour
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
         return gameObj.GetComponent<TimeCatcher>();
     }
 
     [Server]
-    public GameObject ServerSpawnWindRose(Vector3 position, Quaternion rotation, Transform parent = null)
+    public TimeCatcherTrapDoor ServerSpawnTimeCatcherTrapDoor(Vector3 position, Quaternion rotation)
+    {
+        if (!isServer)
+            return null;
+
+        var prefab = LobbyNetworkManager.Instance.TimeCatcherTrapDoorPrefab;
+
+        if (prefab == null)
+        {
+            Debug.LogWarning($"Spawnable prefab for Time Catcher Trap Door is not set. The object will not be spawned.");
+            return null;
+        }
+
+        var gameObj = Instantiate(prefab, position, rotation);
+        NetworkServer.Spawn(gameObj);
+        return gameObj.GetComponent<TimeCatcherTrapDoor>();
+    }
+
+    [Server]
+    public GameObject ServerSpawnWindRose(Vector3 position, Quaternion rotation)
     {
         if (!isServer)
             return null;
@@ -460,7 +669,7 @@ public class WorldGenerator : NetworkBehaviour
             return null;
         }
 
-        var gameObj = Instantiate(prefab, position, rotation, parent);
+        var gameObj = Instantiate(prefab, position, rotation);
         NetworkServer.Spawn(gameObj);
         return gameObj;
     }

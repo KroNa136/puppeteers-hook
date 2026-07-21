@@ -10,7 +10,7 @@ public class Inventory : NetworkBehaviour
     [SyncVar(hook = nameof(OnClientAmuletOwnershipChanged))]
     public bool HasAmulet;
 
-    [SerializeField] private PlayerAudioController _audioController;
+    [SerializeField] private InvestigatorAudioController _audioController;
     private GameHud _gameHud;
 
     [Client]
@@ -50,11 +50,15 @@ public class Inventory : NetworkBehaviour
             return;
 
         _ = _gameHud.Bind((hud, hasAmulet) => hud.SetInvestigatorAmulet(hasAmulet), newValue);
-        //_ = _audioController.Bind(newValue ? c => c.PlayAmuletPickUpSound() : c => c.PlayAmuletSpendSound());
 
         if (newValue)
+        {
             PickedUpAmulet.Invoke();
+        }
         else
+        {
             SpentAmulet.Invoke();
+            _ = _audioController.Bind(c => c.PlayAmuletBreakSound());
+        }
     }
 }

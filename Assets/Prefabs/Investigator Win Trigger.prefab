@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6361891674687032826}
   - component: {fileID: 3320864431746185067}
   - component: {fileID: 3926503710300399354}
+  - component: {fileID: 146068844006753639}
   m_Layer: 0
   m_Name: Investigator Win Trigger
   m_TagString: Untagged
@@ -91,3 +92,15 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2, y: 3, z: 2}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &146068844006753639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4404552523564058702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ec9ef3dff752ca4199af140571ea897, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AlwaysVisible

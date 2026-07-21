@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
@@ -11,10 +12,10 @@ public class StatuesPuzzle : Puzzle
     public override bool IsInValidState => isServer && _spawnedStatues.All(s => s.transform.eulerAngles.y == _targetStatueAngle);
 
     [Server]
-    public override void OnServerInitialize()
+    public override IEnumerator OnServerInitialize()
     {
         if (!isServer)
-            return;
+            yield break;
 
         var spawnPoints = GetComponentsInChildren<SpawnPoint>();
         var statueSpawnPoints = spawnPoints.Where(sp => sp.Type is SpawnPointType.Statue).Select(sp => sp.transform);
@@ -41,7 +42,9 @@ public class StatuesPuzzle : Puzzle
 
             var statue = WorldGenerator.Instance.ServerSpawnStatue(spawnPoint.position, spawnPoint.rotation);
             _spawnedStatues.Add(statue);
-            statue.OnServerFinishedRotation.AddListener(ServerValidate);
+            statue.OnServerFinishedRotation.AddListener(() => StartCoroutine(ServerValidate()));
+
+            yield return new WaitForSeconds(0.3f);
         }
 
         float windRoseAngle = GetRandomRotationAngle(states, statueRotationAngleDelta);
@@ -52,19 +55,25 @@ public class StatuesPuzzle : Puzzle
         var windRoseSpawnPoint = windRoseSpawnPoints.UnityRandomItem();
         _ = WorldGenerator.Instance.ServerSpawnWindRose(windRoseSpawnPoint.position, windRoseSpawnPoint.rotation);
 
+        yield return new WaitForSeconds(0.3f);
+
         var noteSpawnPoint = noteSpawnPoints.UnityRandomItem();
         var note = WorldGenerator.Instance.ServerSpawnNote(noteSpawnPoint.position, noteSpawnPoint.rotation);
+        yield return new WaitForSeconds(0.3f);
         note.ServerSetStatuesPuzzleText(_targetStatueAngle, windRoseAngle);
     }
 
     [Server]
-    public override void BeforeServerLinkedDoorsUnlock()
+    public override IEnumerator BeforeServerLinkedDoorsUnlock()
     {
         if (!isServer)
-            return;
+            yield break;
 
         foreach (var statue in _spawnedStatues)
+        {
             statue.ServerDisableInteraction();
+            yield return new WaitForSeconds(0.3f);
+        }
     }
 
     private float GetRandomRotationAngle(int stateCount, float rotationAngleDelta)

@@ -6,13 +6,23 @@ public static class GameObjectExtensions
     {
         Transform parent = gameObj.transform.parent;
 
+        component = null;
+        return parent != null && parent.TryGetComponent(out component);
+    }
+
+    public static bool TryGetComponentInSecondParent<T>(this GameObject gameObj, out T component) where T : Component
+    {
+        Transform parent = gameObj.transform.parent;
+
+        component = null;
+
         if (parent != null)
         {
-            return parent.TryGetComponent(out component);
+            Transform secondParent = parent.parent;
+            return secondParent != null && secondParent.TryGetComponent(out component);
         }
         else
         {
-            component = null;
             return false;
         }
     }

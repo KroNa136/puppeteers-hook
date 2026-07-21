@@ -59,7 +59,7 @@ public class PauseManager : MonoBehaviour
 
     public void Unpause()
     {
-        _ = _pauseMenu.Bind(m => m.Deactivate());
+        _ = _pauseMenu.Bind(m => m.DeactivateFromPauseManager());
         _ = _gamePlayerMovement.Bind(gpm => gpm.CanBeControlledByPlayer = true);
         _ = _cameraController.Bind(cc => cc.CanBeControlledByPlayer = true);
         _ = _flashlightManager.Bind(fm => fm.CanBeControlledByPlayer = true);

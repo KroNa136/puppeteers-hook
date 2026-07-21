@@ -25,7 +25,7 @@ public class GhostVisibilityManager : NetworkBehaviour
         if (!isServer)
             return;
 
-        Invoke(nameof(ServerSetLowVisibility), 1f);
+        Invoke(nameof(ServerSetLowVisibility), 2f);
     }
 
     [Server]
@@ -71,16 +71,23 @@ public class GhostVisibilityManager : NetworkBehaviour
             .NonNullItems()
             .ForEach(mat =>
             {
-                if (mat.HasProperty("_BaseColor"))
-                {
-                    mat.color = new
-                    (
-                        r: mat.color.r,
-                        g: mat.color.g,
-                        b: mat.color.b,
-                        a: alpha
-                    );
-                }
+                if (!mat.HasProperty("_BaseColor"))
+                    return;
+
+                mat.color = new
+                (
+                    r: mat.color.r,
+                    g: mat.color.g,
+                    b: mat.color.b,
+                    a: clampedAlpha
+                );
             });
+
+        if (isLocalPlayer)
+            return;
+
+        _renderers
+            .NonNullItems()
+            .ForEach(rend => rend.enabled = (clampedAlpha > 0));
     }
 }

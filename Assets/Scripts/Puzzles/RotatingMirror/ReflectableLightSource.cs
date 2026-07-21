@@ -78,7 +78,7 @@ public class ReflectableLightSource : NetworkBehaviour
         RpcDisplayLine(linePointsArray);
     }
 
-    [ClientRpc]
+    [ClientRpc(channel = Channels.Unreliable)]
     public void RpcDisplayLine(Vector3[] linePoints)
     {
         _lineRenderer.positionCount = linePoints.Length;

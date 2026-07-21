@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_RenderPipelineSettings:
     supportShadowMask: 0
-    supportSSR: 0
-    supportSSRTransparent: 0
+    supportSSR: 1
+    supportSSRTransparent: 1
     supportSSAO: 1
     supportSSGI: 1
     supportSubsurfaceScattering: 1
@@ -79,7 +79,7 @@ MonoBehaviour:
     supportTerrainHole: 0
     lightProbeSystem: 1
     oldLightProbeSystem: 1
-    probeVolumeMemoryBudget: 1024
+    probeVolumeMemoryBudget: 2048
     supportProbeVolumeGPUStreaming: 0
     supportProbeVolumeDiskStreaming: 0
     probeVolumeSHBands: 1
@@ -100,11 +100,11 @@ MonoBehaviour:
       maxEnvLightsOnScreen: 32
       reflectionCacheCompressed: 1
       reflectionProbeFormat: 74
-      reflectionProbeTexCacheSize: 4096
+      reflectionProbeTexCacheSize: 2048
       reflectionProbeTexLastValidCubeMip: 3
       reflectionProbeTexLastValidPlanarMip: 0
       reflectionProbeDecreaseResToFit: 1
-      skyReflectionSize: 1024
+      skyReflectionSize: 2048
       skyLightingOverrideLayerMask:
         serializedVersion: 2
         m_Bits: 0
@@ -119,7 +119,7 @@ MonoBehaviour:
       maxLocalVolumetricFogSize: 32
       maxLocalVolumetricFogOnScreen: 64
     hdShadowInitParams:
-      maxShadowRequests: 128
+      maxShadowRequests: 1024
       directionalShadowsDepthBits: 16
       punctualShadowFilteringQuality: 2
       directionalShadowFilteringQuality: 2

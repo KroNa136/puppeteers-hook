@@ -7,7 +7,7 @@ public class HeadBobController : MonoBehaviour
     [Header("References")]
     
     [SerializeField] Transform mainCamera;
-    [SerializeField] PlayerAudioController audioController;
+    [SerializeField] InvestigatorAudioController audioController;
 
     [Header("Options")]
 

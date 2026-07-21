@@ -5,6 +5,11 @@ public class GhostStealthAbility : GhostAbility
 {
     [SerializeField] private GhostVisibilityManager _visibilityManager;
 
+    protected override void PlayActivationSound()
+    {
+        _ = _audioController.Bind(c => c.PlayStealthAbilityActivationSound());
+    }
+
     [Server]
     public override void ServerDoActivation()
     {

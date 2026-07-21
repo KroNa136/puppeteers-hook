@@ -9,9 +9,14 @@ public class GhostIllusionAbility : GhostAbility
 
     private Collider[] _overlaps;
     private Collider[] _overlaps2;
-    private List<Room> _roomsToEnableIllusionIn = new();
+    private List<NetworkRoom> _networkRoomsToEnableIllusionIn = new();
 
-    public List<Room> RoomsWithIllusion => _roomsToEnableIllusionIn.ToList();
+    public List<NetworkRoom> NetworkRoomsWithIllusion => _networkRoomsToEnableIllusionIn.ToList();
+
+    protected override void PlayActivationSound()
+    {
+        _ = _audioController.Bind(c => c.PlayIllusionAbilityActivationSound());
+    }
 
     [Server]
     public override void OnStartServer()
@@ -51,13 +56,13 @@ public class GhostIllusionAbility : GhostAbility
             queryTriggerInteraction: QueryTriggerInteraction.Collide
         );
 
-        bool isNotInPuzzleRoom = _overlaps2
+        bool isInRoomWithIllusionSets = _overlaps2
             .Take(overlapCount)
             .Select(o => o.TryGetComponent(out Room room) ? room : null)
             .NonNullItems()
-            .None(r => r.Type is RoomType.EmergencyExit or RoomType.StatuesPuzzleRoom or RoomType.RotatingMirrorsPuzzleRoom);
+            .Any(r => r.IllusionSets.Any());
 
-        CanBeActivated = isNotInPuzzleRoom;
+        CanBeActivated = isInRoomWithIllusionSets;
     }
 
     [Server]
@@ -75,13 +80,14 @@ public class GhostIllusionAbility : GhostAbility
             queryTriggerInteraction: QueryTriggerInteraction.Collide
         );
 
-        _roomsToEnableIllusionIn = _overlaps
+        _networkRoomsToEnableIllusionIn = _overlaps
             .Take(overlapCount)
             .Select(o => o.TryGetComponent(out Room room) ? room : null)
             .NonNullItems()
+            .Select(r => r.LinkedNetworkRoom)
             .ToList();
 
-        foreach (var room in _roomsToEnableIllusionIn)
+        foreach (var room in _networkRoomsToEnableIllusionIn)
             room.ServerEnableIllusion();
     }
 
@@ -91,9 +97,9 @@ public class GhostIllusionAbility : GhostAbility
         if (!isServer)
             return;
 
-        foreach (var room in _roomsToEnableIllusionIn)
+        foreach (var room in _networkRoomsToEnableIllusionIn)
             room.ServerDisableIllusion();
 
-        _roomsToEnableIllusionIn.Clear();
+        _networkRoomsToEnableIllusionIn.Clear();
     }
 }

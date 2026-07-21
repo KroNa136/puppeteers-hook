@@ -13,22 +13,20 @@ public class GameManager : NetworkBehaviour
     public static UnityEvent OnClientPlayerRolesAssigned = new();
     public static UnityEvent<float> OnClientWorldGenerationProgressUpdated = new();
     public static UnityEvent OnClientWorldGenerationCompleted = new();
-    //public static UnityEvent<float> OnClientWorldReconstructionProgressUpdated = new();
-    //public static UnityEvent OnClientWorldReconstructionCompleted = new();
     public static UnityEvent<int> OnClientTimerUpdated = new();
+    public static UnityEvent OnServerGhostPreparePhaseStarted = new();
     public static UnityEvent OnClientGhostPreparePhaseStarted = new();
     public static UnityEvent OnServerMainPhaseStarted = new();
     public static UnityEvent OnClientMainPhaseStarted = new();
     public static UnityEvent<int> OnClientGameTimeDecreased = new();
+    public static UnityEvent OnServerGameOver = new();
     public static UnityEvent<bool> OnClientGameOver = new();
-
-    //[SerializeField][Min(1)] private int _maxClientWorldReconstructionAttempts = 3;
 
     [Space]
 
     [SerializeField][Min(0)] private int _ghostSpawnAfterTime = 5;
     [SerializeField][Min(0)] private int _ghostPrepareTime = 60;
-    [SerializeField][Min(0)] private int _mainGameTime = 600;
+    [SerializeField][Min(0)] private int _mainGameTime = 900;
 
     [Space]
 
@@ -36,11 +34,6 @@ public class GameManager : NetworkBehaviour
     private NetworkTimer _ghostPrepareTimer;
     private NetworkTimer _investigatorSpawnTimer;
     private NetworkTimer _mainTimer;
-
-    private Transform _networkTimersParent;
-
-    //private readonly List<NetworkConnectionToClient> _clientsThatSuccededToReconstructWorld = new();
-    //private readonly Dictionary<NetworkConnectionToClient, int> _clientWorldReconstructionAttempts = new();
 
     private bool _gameStarted = false;
 
@@ -58,54 +51,38 @@ public class GameManager : NetworkBehaviour
         if (!isServer)
             return;
 
-        Invoke(nameof(ServerInitializeAndStartGame), 1f);
+        _ = StartCoroutine(ServerInitializeAndStartGame());
     }
 
     [Server]
-    public void ServerInitializeAndStartGame()
+    public IEnumerator ServerInitializeAndStartGame()
     {
         if (!isServer)
-            return;
+            yield break;
+
+        yield return new WaitForSeconds(2f);
 
         var worldGenerator = Instantiate(LobbyNetworkManager.Instance.WorldGeneratorPrefab);
         NetworkServer.Spawn(worldGenerator);
-
-        _networkTimersParent = GameObject.Find("Network Timers").transform;
-
-        _ghostSpawnTimer = ServerSpawnNetworkTimer();
-        _ghostPrepareTimer = ServerSpawnNetworkTimer();
-        _investigatorSpawnTimer = ServerSpawnNetworkTimer();
-        _mainTimer = ServerSpawnNetworkTimer();
-
-        ServerStartGame();
-    }
-
-    [Server]
-    public NetworkTimer ServerSpawnNetworkTimer()
-    {
-        if (!isServer)
-            return null;
+        yield return new WaitForSeconds(0.2f);
 
         if (LobbyNetworkManager.Instance.DEBUG_MODE)
         {
-            _ghostSpawnAfterTime = 1;
-            _ghostPrepareTime = 5;
+            _ghostSpawnAfterTime = 5;
+            _ghostPrepareTime = 10;
         }
 
-        var timerObj = _networkTimersParent != null
-            ? Instantiate(LobbyNetworkManager.Instance.NetworkTimerPrefab, _networkTimersParent)
-            : Instantiate(LobbyNetworkManager.Instance.NetworkTimerPrefab);
+        _ghostSpawnTimer = ServerSpawnNetworkTimer();
+        yield return new WaitForSeconds(0.2f);
+        _ghostPrepareTimer = ServerSpawnNetworkTimer();
+        yield return new WaitForSeconds(0.2f);
+        _investigatorSpawnTimer = ServerSpawnNetworkTimer();
+        yield return new WaitForSeconds(0.2f);
+        _mainTimer = ServerSpawnNetworkTimer();
+        yield return new WaitForSeconds(0.2f);
 
-        NetworkServer.Spawn(timerObj);
-
-        return timerObj.GetComponent<NetworkTimer>();
-    }
-
-    [Server]
-    public void ServerStartGame()
-    {
-        if (!isServer)
-            return;
+        _ = ServerSpawnNetworkMusicController();
+        yield return new WaitForSeconds(0.2f);
 
         if (LobbyNetworkManager.Instance.DEBUG_MODE)
         {
@@ -118,20 +95,34 @@ public class GameManager : NetworkBehaviour
             ServerAssignPlayerRoles();
         }
 
-        RpcPlayerRolesAssigned();
-        ServerStartWorldGeneration();
+        yield return new WaitForSeconds(0.2f);
 
-        /*
-        if (LobbyNetworkManager.Instance.DEBUG_MODE)
-        {
-            RpcWorldGenerationCompleted();
-            ServerStartPlayerSpawnTimers();
-        }
-        else
-        {
-            ServerStartWorldGeneration();
-        }
-        */
+        RpcPlayerRolesAssigned();
+        yield return new WaitForSeconds(0.2f);
+
+        ServerStartWorldGeneration();
+    }
+
+    [Server]
+    public NetworkTimer ServerSpawnNetworkTimer()
+    {
+        if (!isServer)
+            return null;        
+
+        var timerObj = Instantiate(LobbyNetworkManager.Instance.NetworkTimerPrefab);
+        NetworkServer.Spawn(timerObj);
+        return timerObj.GetComponent<NetworkTimer>();
+    }
+
+    [Server]
+    public NetworkMusicController ServerSpawnNetworkMusicController()
+    {
+        if (!isServer)
+            return null;
+
+        var networkMusicControllerObj = Instantiate(LobbyNetworkManager.Instance.NetworkMusicControllerPrefab);
+        NetworkServer.Spawn(networkMusicControllerObj);
+        return networkMusicControllerObj.GetComponent<NetworkMusicController>();
     }
 
     [Server]
@@ -179,7 +170,6 @@ public class GameManager : NetworkBehaviour
             return;
 
         RpcWorldGenerationCompleted();
-        //ServerStartWorldReconstruction();
         ServerStartPlayerSpawnTimers();
     }
 
@@ -189,91 +179,13 @@ public class GameManager : NetworkBehaviour
         OnClientWorldGenerationCompleted.Invoke();
     }
 
-    /*
-    [Server]
-    public void ServerStartWorldReconstruction()
-    {
-        if (!isServer)
-            return;
-
-        WorldGenerator.Instance.RpcReconstructWorld(WorldGenerator.Instance.WorldData, WorldGenerator.Instance.WorldHash);
-        RpcAddWorldReconstructionProgressUpdatedListener();
-        WorldGenerator.OnReconstructionCompleted.AddListener(OnServerReconstructedWorld);
-    }
-
-    [ClientRpc]
-    public void RpcAddWorldReconstructionProgressUpdatedListener()
-    {
-        WorldGenerator.OnReconstructionProgressUpdated.AddListener(ClientWorldReconstructionProgressUpdated);
-    }
-
-    [Client]
-    public void ClientWorldReconstructionProgressUpdated(float value)
-    {
-        if (!isClient)
-            return;
-
-        OnClientWorldReconstructionProgressUpdated.Invoke(value);
-    }
-
-    [Server]
-    public void OnServerReconstructedWorld(NetworkConnectionToClient conn, bool success)
-    {
-        if (!isServer)
-            return;
-
-        if (_clientsThatSuccededToReconstructWorld.Count >= LobbyNetworkManager.Instance.ConnectedPlayers.Count)
-            return;
-
-        if (success)
-        {
-            _clientsThatSuccededToReconstructWorld.Add(conn);
-
-            if (_clientsThatSuccededToReconstructWorld.Count == LobbyNetworkManager.Instance.ConnectedPlayers.Count)
-            {
-                RpcWorldReconstructionCompleted();
-                ServerStartPlayerSpawnTimers();
-            }
-        }
-        else
-        {
-            if (_clientWorldReconstructionAttempts.ContainsKey(conn))
-            {
-                _clientWorldReconstructionAttempts[conn]++;
-
-                if (_clientWorldReconstructionAttempts[conn] >= _maxClientWorldReconstructionAttempts)
-                {
-                    // Either one of the clients has a bad connection, or it is corrupted or hacked, or there is a MITM attack going on.
-                    // In any case, we should terminate the session.
-                    // TODO: stop session through LobbyNetworkManager and send the reason to clients
-                    conn.Disconnect();
-                }
-                else
-                {
-                    WorldGenerator.Instance.TargetRpcReconstructWorld(conn, WorldGenerator.Instance.WorldData, WorldGenerator.Instance.WorldHash);
-                }
-            }
-            else
-            {
-                _clientWorldReconstructionAttempts.Add(conn, 1);
-            }
-        }
-    }
-
-    [ClientRpc]
-    public void RpcWorldReconstructionCompleted()
-    {
-        OnClientWorldReconstructionCompleted.Invoke();
-    }
-    */
-
     [Server]
     public void ServerStartPlayerSpawnTimers()
     {
         if (!isServer)
             return;
 
-        foreach (var conn in LobbyNetworkManager.Instance.ConnectedPlayers /*_clientsThatSuccededToReconstructWorld*/)
+        foreach (var conn in LobbyNetworkManager.Instance.ConnectedPlayers)
         {
             var playerData = LobbyNetworkManager.Instance.GetConnectedPlayerData(conn);
 
@@ -295,7 +207,7 @@ public class GameManager : NetworkBehaviour
             TargetRpcSubscribeToTimer(conn, timerToSubscribeTo.netId);
         }
 
-        _ghostSpawnTimer.OnTimeRanOut.AddListener(ServerStartGhostPreparePhase);
+        _ghostSpawnTimer.OnTimeRanOut.AddListener(ServerStartGhostPreparePhaseCoroutine);
         _ghostSpawnTimer.ServerStartTimer(_ghostSpawnAfterTime);
 
         _investigatorSpawnTimer.ServerStartTimer(_ghostSpawnAfterTime + _ghostPrepareTime);
@@ -352,35 +264,54 @@ public class GameManager : NetworkBehaviour
             return;
 
         timer.OnUpdated.RemoveListener(ClientTimerUpdated);
-        timer.OnTimeRanOut.RemoveListener(() => ClientUnsubscribeFromTimer(timer));
+        //timer.OnTimeRanOut.RemoveListener(() => ClientUnsubscribeFromTimer(timer));
     }
 
     [Server]
-    public void ServerStartGhostPreparePhase()
+    public void ServerStartGhostPreparePhaseCoroutine()
     {
         if (!isServer)
             return;
 
-        var unlockedDoors = FindObjectsByType<Door>(FindObjectsSortMode.None)
-            .Where(door => !door.IsLocked);
+        RpcGhostPreparePhaseStarted();
 
-        foreach (var door in unlockedDoors)
-            door.ServerOpen();
+        _ = StartCoroutine(ServerStartGhostPreparePhase());
+    }
 
-        LobbyNetworkManager.Instance.ServerSpawnGhostPlayer();
+    [Server]
+    public IEnumerator ServerStartGhostPreparePhase()
+    {
+        if (!isServer)
+            yield break;
+
+        _ = StartCoroutine(ServerOpenUnlockedDoors());
+
+        yield return new WaitForSeconds(0.1f);
+
+        var mainHallRoom = FindObjectsByType<Room>(FindObjectsSortMode.None)
+            .FirstOrDefault(r => r.Type is RoomType.MainHall);
+
+        LobbyNetworkManager.Instance.ServerSpawnGhostPlayer(mainHallRoom.PlayerSpawnPosition, mainHallRoom.transform.rotation);
+
+        yield return new WaitForSeconds(0.1f);
 
         var ghost = FindAnyObjectByType<GhostPlayerMovement>();
         ghost.CanDash = false;
         ghost.IsInPreparePhase = true;
+
+        yield return new WaitForSeconds(0.1f);
 
         var ghostAbilities = ghost.GetComponents<GhostAbility>();
 
         foreach (var ability in ghostAbilities)
             ability.CanBeActivated = false;
 
+        yield return new WaitForSeconds(0.1f);
+
+        OnServerGhostPreparePhaseStarted.Invoke();
         RpcGhostPreparePhaseStarted();
 
-        foreach (var conn in LobbyNetworkManager.Instance.ConnectedPlayers /*_clientsThatSuccededToReconstructWorld*/)
+        foreach (var conn in LobbyNetworkManager.Instance.ConnectedPlayers)
         {
             var role = LobbyNetworkManager.Instance.GetConnectedPlayerData(conn).Role;
 
@@ -390,8 +321,26 @@ public class GameManager : NetworkBehaviour
             TargetRpcSubscribeToTimer(conn, _ghostPrepareTimer.netId);
         }
 
-        _ghostPrepareTimer.OnTimeRanOut.AddListener(ServerStartMainPhase);
+        yield return new WaitForSeconds(0.1f);
+
+        _ghostPrepareTimer.OnTimeRanOut.AddListener(ServerStartMainPhaseCoroutine);
         _ghostPrepareTimer.ServerStartTimer(_ghostPrepareTime);
+    }
+
+    [Server]
+    public IEnumerator ServerOpenUnlockedDoors()
+    {
+        if (!isServer)
+            yield break;
+
+        var unlockedDoors = FindObjectsByType<Door>(FindObjectsSortMode.None)
+            .Where(door => !door.IsLocked);
+
+        foreach (var door in unlockedDoors)
+        {
+            door.ServerOpen();
+            yield return new WaitForSeconds(0.1f);
+        }
     }
 
     [ClientRpc]
@@ -401,45 +350,86 @@ public class GameManager : NetworkBehaviour
     }
 
     [Server]
-    private void ServerStartMainPhase()
+    private void ServerStartMainPhaseCoroutine()
     {
         if (!isServer)
             return;
 
-        var openedDoors = FindObjectsByType<Door>(FindObjectsSortMode.None)
-            .Where(door => door.IsOpened);
+        _ = StartCoroutine(ServerStartMainPhase());
+    }
 
-        foreach (var door in openedDoors)
-            door.ServerClose();
+    [Server]
+    public IEnumerator ServerStartMainPhase()
+    {
+        if (!isServer)
+            yield break;
+
+        _ = StartCoroutine(ServerCloseOpenedDoors());
+
+        yield return new WaitForSeconds(0.1f);
 
         var ghost = FindAnyObjectByType<GhostPlayerMovement>();
         ghost.CanDash = true;
         ghost.IsInPreparePhase = false;
+
+        yield return new WaitForSeconds(0.1f);
 
         var ghostAbilities = ghost.GetComponents<GhostAbility>();
 
         foreach (var ability in ghostAbilities)
             ability.CanBeActivated = true;
 
-        var roomToTeleportGhostTo = FindObjectsByType<Room>(FindObjectsSortMode.None)
-            .Where(r => r.Type is not RoomType.MainHall)
-            .Where(r => r.Neighbors.None(n => n.Type is RoomType.MainHall))
-            .UnityRandomItem();
+        yield return new WaitForSeconds(0.1f);
 
-        ghost.ServerForceTeleportTo(roomToTeleportGhostTo.PlayerSpawnPosition);
+        var rooms = FindObjectsByType<Room>(FindObjectsSortMode.None);
 
-        LobbyNetworkManager.Instance.ServerSpawnInvestigatorPlayer();
+        if (rooms.Count() > 2)
+        {
+            var roomToTeleportGhostTo = rooms
+                .Where(r => r.Type is not RoomType.MainHall)
+                .Where(r => r.LinkedNetworkRoom.Neighbors.None(n => n.Type is RoomType.MainHall))
+                .UnityRandomItem();
+
+            ghost.ServerForceTeleportTo(roomToTeleportGhostTo.PlayerSpawnPosition);
+        }
+
+        yield return new WaitForSeconds(0.1f);
+
+        var mainHallRoom = FindObjectsByType<Room>(FindObjectsSortMode.None)
+            .FirstOrDefault(r => r.Type is RoomType.MainHall);
+
+        LobbyNetworkManager.Instance.ServerSpawnInvestigatorPlayer(mainHallRoom.PlayerSpawnPosition, mainHallRoom.transform.rotation);
+
+        yield return new WaitForSeconds(0.1f);
 
         OnServerMainPhaseStarted.Invoke();
         RpcMainPhaseStarted();
 
-        foreach (var conn in LobbyNetworkManager.Instance.ConnectedPlayers /*_clientsThatSuccededToReconstructWorld*/)
+        foreach (var conn in LobbyNetworkManager.Instance.ConnectedPlayers)
             TargetRpcSubscribeToTimer(conn, _mainTimer.netId);
+
+        yield return new WaitForSeconds(0.1f);
 
         _mainTimer.OnTimeRanOut.AddListener(ServerGhostWin);
         _mainTimer.ServerStartTimer(_mainGameTime);
 
         _gameStarted = true;
+    }
+
+    [Server]
+    public IEnumerator ServerCloseOpenedDoors()
+    {
+        if (!isServer)
+            yield break;
+
+        var openedDoors = FindObjectsByType<Door>(FindObjectsSortMode.None)
+            .Where(door => door.IsOpened);
+
+        foreach (var door in openedDoors)
+        {
+            door.ServerClose();
+            yield return new WaitForSeconds(0.1f);
+        }
     }
 
     [ClientRpc]
@@ -473,9 +463,11 @@ public class GameManager : NetworkBehaviour
         if (!_gameStarted)
             return;
 
+        OnServerGameOver.Invoke();
+
         _mainTimer.ServerStopTimer();
 
-        foreach (var conn in LobbyNetworkManager.Instance.ConnectedPlayers /*_clientsThatSuccededToReconstructWorld*/)
+        foreach (var conn in LobbyNetworkManager.Instance.ConnectedPlayers)
         {
             var role = LobbyNetworkManager.Instance.GetConnectedPlayerData(conn).Role;
 
@@ -500,7 +492,9 @@ public class GameManager : NetworkBehaviour
         if (!_gameStarted)
             return;
 
-        foreach (var conn in LobbyNetworkManager.Instance.ConnectedPlayers /*_clientsThatSuccededToReconstructWorld*/)
+        OnServerGameOver.Invoke();
+
+        foreach (var conn in LobbyNetworkManager.Instance.ConnectedPlayers)
         {
             var role = LobbyNetworkManager.Instance.GetConnectedPlayerData(conn).Role;
 

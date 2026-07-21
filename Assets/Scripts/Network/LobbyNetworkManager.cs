@@ -44,24 +44,19 @@ public class LobbyNetworkManager : NetworkManager
     [SerializeField] private GameObject _gameManagerPrefab;
     [SerializeField] private GameObject _worldGeneratorPrefab;
     [SerializeField] private GameObject _networkTimerPrefab;
+    [SerializeField] private GameObject _networkMusicControllerPrefab;
 
     [Space]
 
-    [SerializeField] private GameObject _mainHallPrefab;
-    [SerializeField] private GameObject _emergencyExitPrefab;
-    [SerializeField] private GameObject _hallPrefab;
-    [SerializeField] private GameObject _livingRoomPrefab;
-    [SerializeField] private GameObject _simpleCorridorPrefab;
-    [SerializeField] private GameObject _tShapedCorridorPrefab;
-    [SerializeField] private GameObject _stairwayRoomPrefab;
-    [SerializeField] private GameObject _statuesPuzzleRoomPrefab;
-    [SerializeField] private GameObject _rotatingMirrorsPuzzleRoomPrefab;
+    [SerializeField] private GameObject _networkRoomPrefab;
 
     [Space]
 
     [SerializeField] private GameObject _candlesticksPuzzlePrefab;
+    [SerializeField] private GameObject _holdablesPuzzlePrefab;
     [SerializeField] private GameObject _statuesPuzzlePrefab;
     [SerializeField] private GameObject _rotatingMirrorsPuzzlePrefab;
+    [SerializeField] private GameObject _clocksPuzzlePrefab;
     [SerializeField] private GameObject _investigatorWinTriggerPrefab;
 
     [Space]
@@ -72,11 +67,19 @@ public class LobbyNetworkManager : NetworkManager
     [SerializeField] private GameObject _rotatingMirrorPrefab;
     [SerializeField] private GameObject _reflectableLightSourcePrefab;
     [SerializeField] private GameObject _reflectableLightTargetPrefab;
+    [SerializeField] private GameObject _holdableSkullPrefab;
+    [SerializeField] private GameObject _holdableGlobePrefab;
+    [SerializeField] private GameObject _holdableCrystalPrefab;
+    [SerializeField] private GameObject _holdableSandClockPrefab;
+    [SerializeField] private GameObject _timeCatcherTrapDoorPrefab;
 
     [Space]
 
     [SerializeField] private GameObject _amuletPrefab;
+    [SerializeField] private GameObject _leftCabinetDoorPrefab;
+    [SerializeField] private GameObject _rightCabinetDoorPrefab;
     [SerializeField] private GameObject _doorPrefab;
+    [SerializeField] private GameObject _drawerPrefab;
     [SerializeField] private GameObject _notePrefab;
 
     [Space]
@@ -85,20 +88,15 @@ public class LobbyNetworkManager : NetworkManager
 
     public GameObject WorldGeneratorPrefab => _worldGeneratorPrefab;
     public GameObject NetworkTimerPrefab => _networkTimerPrefab;
+    public GameObject NetworkMusicControllerPrefab => _networkMusicControllerPrefab;
 
-    public GameObject MainHallPrefab => _mainHallPrefab;
-    public GameObject EmergencyExitPrefab => _emergencyExitPrefab;
-    public GameObject HallPrefab => _hallPrefab;
-    public GameObject LivingRoomPrefab => _livingRoomPrefab;
-    public GameObject SimpleCorridorPrefab => _simpleCorridorPrefab;
-    public GameObject TShapedCorridorPrefab => _tShapedCorridorPrefab;
-    public GameObject StairwayRoomPrefab => _stairwayRoomPrefab;
-    public GameObject StatuesPuzzleRoomPrefab => _statuesPuzzleRoomPrefab;
-    public GameObject RotatingMirrorsPuzzleRoomPrefab => _rotatingMirrorsPuzzleRoomPrefab;
+    public GameObject NetworkRoomPrefab => _networkRoomPrefab;
 
     public GameObject CandlesticksPuzzlePrefab => _candlesticksPuzzlePrefab;
+    public GameObject HoldablesPuzzlePrefab => _holdablesPuzzlePrefab;
     public GameObject StatuesPuzzlePrefab => _statuesPuzzlePrefab;
     public GameObject RotatingMirrorsPuzzlePrefab => _rotatingMirrorsPuzzlePrefab;
+    public GameObject ClocksPuzzlePrefab => _clocksPuzzlePrefab;
     public GameObject InvestigatorWinTriggerPrefab => _investigatorWinTriggerPrefab;
 
     public GameObject CandlestickPrefab => _candlestickPrefab;
@@ -107,9 +105,17 @@ public class LobbyNetworkManager : NetworkManager
     public GameObject RotatingMirrorPrefab => _rotatingMirrorPrefab;
     public GameObject ReflectableLightSourcePrefab => _reflectableLightSourcePrefab;
     public GameObject ReflectableLightTargetPrefab => _reflectableLightTargetPrefab;
+    public GameObject HoldableSkullPrefab => _holdableSkullPrefab;
+    public GameObject HoldableGlobePrefab => _holdableGlobePrefab;
+    public GameObject HoldableCrystalPrefab => _holdableCrystalPrefab;
+    public GameObject HoldableSandClockPrefab => _holdableSandClockPrefab;
+    public GameObject TimeCatcherTrapDoorPrefab => _timeCatcherTrapDoorPrefab;
 
     public GameObject AmuletPrefab => _amuletPrefab;
+    public GameObject LeftCabinetDoorPrefab => _leftCabinetDoorPrefab;
+    public GameObject RightCabinetDoorPrefab => _rightCabinetDoorPrefab;
     public GameObject DoorPrefab => _doorPrefab;
+    public GameObject DrawerPrefab => _drawerPrefab;
     public GameObject NotePrefab => _notePrefab;
 
     public GameObject TimeCatcherPrefab => _timeCatcherPrefab;
@@ -257,7 +263,7 @@ public class LobbyNetworkManager : NetworkManager
     }
 
     [Server]
-    public void ServerSpawnGhostPlayer()
+    public void ServerSpawnGhostPlayer(Vector3 spawnPosition, Quaternion spawnRotation)
     {
         if (!NetworkServer.active)
             return;
@@ -288,13 +294,13 @@ public class LobbyNetworkManager : NetworkManager
             return;
         }
 
-        GameObject ghostPlayer = Instantiate(_ghostPlayerPrefab);
+        GameObject ghostPlayer = Instantiate(_ghostPlayerPrefab, spawnPosition, spawnRotation);
 
-        _ = NetworkServer.ReplacePlayerForConnection(conn, ghostPlayer, ReplacePlayerOptions.Destroy);
+        _ = NetworkServer.ReplacePlayerForConnection(conn, ghostPlayer, ReplacePlayerOptions.KeepActive);
     }
 
     [Server]
-    public void ServerSpawnInvestigatorPlayer()
+    public void ServerSpawnInvestigatorPlayer(Vector3 spawnPosition, Quaternion spawnRotation)
     {
         if (!NetworkServer.active)
             return;
@@ -325,9 +331,9 @@ public class LobbyNetworkManager : NetworkManager
             return;
         }
 
-        GameObject investigatorPlayer = Instantiate(_investigatorPlayerPrefab);
+        GameObject investigatorPlayer = Instantiate(_investigatorPlayerPrefab, spawnPosition, spawnRotation);
 
-        _ = NetworkServer.ReplacePlayerForConnection(conn, investigatorPlayer, ReplacePlayerOptions.Destroy);
+        _ = NetworkServer.ReplacePlayerForConnection(conn, investigatorPlayer, ReplacePlayerOptions.KeepActive);
     }
 
     #endregion Player Spawning
@@ -455,13 +461,9 @@ public class LobbyNetworkManager : NetworkManager
         string scenePath = SceneManager.GetActiveScene().path;
 
         if (scenePath.Equals(_menuScene))
-        {
             ServerOnAllPlayersReadyOnMenuScene();
-        }
         else if (scenePath.Equals(_gameScene))
-        {
             ServerOnAllPlayersReadyOnGameScene();
-        }
     }
 
     public override void OnServerAddPlayer(NetworkConnectionToClient conn)
@@ -486,8 +488,6 @@ public class LobbyNetworkManager : NetworkManager
 
     public override void OnServerDisconnect(NetworkConnectionToClient conn)
     {
-        Debug.Log("on server disconnect");
-
         if (!_connectedPlayersData.ContainsKey(conn))
             return;
 
@@ -520,17 +520,8 @@ public class LobbyNetworkManager : NetworkManager
         StopSessionStatus stopSessionStatus = await SessionManager.Instance.StopSession();
 
         if (stopSessionStatus is StopSessionStatus.Failed)
-            _ = StartCoroutine(ServerTryStopSessionAfterDelay(1f));
-    }
-
-    [Server]
-    private IEnumerator ServerTryStopSessionAfterDelay(float delay)
-    {
-        if (!NetworkServer.active)
-            yield break;
-
-        yield return new WaitForSeconds(delay);
-        ServerStopSessionAsync();
+            // fallback to a basic Mirror method
+            NetworkServer.Shutdown();
     }
 
     #endregion Server Overrides
@@ -558,20 +549,15 @@ public class LobbyNetworkManager : NetworkManager
         _ = _gameManagerPrefab.Bind(NetworkClient.RegisterPrefab);
         _ = _worldGeneratorPrefab.Bind(NetworkClient.RegisterPrefab);
         _ = _networkTimerPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _networkMusicControllerPrefab.Bind(NetworkClient.RegisterPrefab);
 
-        _ = _mainHallPrefab.Bind(NetworkClient.RegisterPrefab);
-        _ = _emergencyExitPrefab.Bind(NetworkClient.RegisterPrefab);
-        _ = _hallPrefab.Bind(NetworkClient.RegisterPrefab);
-        _ = _livingRoomPrefab.Bind(NetworkClient.RegisterPrefab);
-        _ = _simpleCorridorPrefab.Bind(NetworkClient.RegisterPrefab);
-        _ = _tShapedCorridorPrefab.Bind(NetworkClient.RegisterPrefab);
-        _ = _stairwayRoomPrefab.Bind(NetworkClient.RegisterPrefab);
-        _ = _statuesPuzzleRoomPrefab.Bind(NetworkClient.RegisterPrefab);
-        _ = _rotatingMirrorsPuzzleRoomPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _networkRoomPrefab.Bind(NetworkClient.RegisterPrefab);
 
         _ = _candlesticksPuzzlePrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _holdablesPuzzlePrefab.Bind(NetworkClient.RegisterPrefab);
         _ = _statuesPuzzlePrefab.Bind(NetworkClient.RegisterPrefab);
         _ = _rotatingMirrorsPuzzlePrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _clocksPuzzlePrefab.Bind(NetworkClient.RegisterPrefab);
         _ = _investigatorWinTriggerPrefab.Bind(NetworkClient.RegisterPrefab);
 
         _ = _candlestickPrefab.Bind(NetworkClient.RegisterPrefab);
@@ -580,9 +566,17 @@ public class LobbyNetworkManager : NetworkManager
         _ = _rotatingMirrorPrefab.Bind(NetworkClient.RegisterPrefab);
         _ = _reflectableLightSourcePrefab.Bind(NetworkClient.RegisterPrefab);
         _ = _reflectableLightTargetPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _holdableSkullPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _holdableGlobePrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _holdableCrystalPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _holdableSandClockPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _timeCatcherTrapDoorPrefab.Bind(NetworkClient.RegisterPrefab);
 
         _ = _amuletPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _leftCabinetDoorPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _rightCabinetDoorPrefab.Bind(NetworkClient.RegisterPrefab);
         _ = _doorPrefab.Bind(NetworkClient.RegisterPrefab);
+        _ = _drawerPrefab.Bind(NetworkClient.RegisterPrefab);
         _ = _notePrefab.Bind(NetworkClient.RegisterPrefab);
 
         _ = _timeCatcherPrefab.Bind(NetworkClient.RegisterPrefab);
@@ -606,10 +600,13 @@ public class LobbyNetworkManager : NetworkManager
         if (NetworkClient.connection.isAuthenticated && !NetworkClient.ready)
             _ = NetworkClient.Ready();
 
+        if (SceneManager.GetActiveScene().path.Equals(_menuScene))
+            MusicController.Instance.StopMusic();
+
         if (SceneManager.GetActiveScene().path.Equals(_lobbyScene))
             _ = NetworkClient.AddPlayer();
 
-        // Debug.LogError($"[Client] Scene changed. Network objects: {string.Join(", ", FindObjectsByType<NetworkIdentity>(FindObjectsSortMode.None).Select(obj => $"{obj.name} (netId={obj.netId})"))}");
+        // Debug.Log($"[Client] Scene changed. Network objects: {string.Join(", ", FindObjectsByType<NetworkIdentity>(FindObjectsSortMode.None).Select(obj => $"{obj.name} (netId={obj.netId})"))}");
     }
 
     public override void OnClientDisconnect()
@@ -617,7 +614,10 @@ public class LobbyNetworkManager : NetworkManager
         OnClientDisconnected.Invoke();
 
         if (!SceneManager.GetActiveScene().path.Equals(_menuScene))
+        {
             GoToMenuScene();
+            MusicController.Instance.StopMusic();
+        }
     }
 
     #endregion Client Overrides

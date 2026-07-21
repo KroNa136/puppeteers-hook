@@ -24,7 +24,7 @@ public class GhostPlayerMovement : GamePlayerMovement
     [SyncVar]
     public bool IsInPreparePhase;
 
-    // [SerializeField] private GhostAudioController _ghostAudioController;
+    [SerializeField] private GhostAudioController _ghostAudioController;
 
     [Space]
 
@@ -42,8 +42,16 @@ public class GhostPlayerMovement : GamePlayerMovement
 
     [Space]
 
+    [SerializeField] private float _walkingFootstepInterval = 0.6f;
+    [SerializeField] private float _preparePhaseFootstepInterval = 0.3f;
+
+    protected override float FootstepInterval => IsDashing ? 1000f : IsInPreparePhase ? _preparePhaseFootstepInterval : _walkingFootstepInterval;
+
+    [Space]
+
     [SerializeField] private int _fearGameTimeDecrease = 10;
     [SerializeField] private float _touchedInvestigatorsCheckControllerRadiusInflation = 3f;
+    [SerializeField] private LayerMask _fearReceiversLayerMask;
     private Collider[] _playerOverlaps;
     private bool _inducedFear = false;
 
@@ -54,7 +62,6 @@ public class GhostPlayerMovement : GamePlayerMovement
 
     private GhostStaminaManager _staminaManager;
     private GhostVisibilityManager _visibilityManager;
-    private GameHud _gameHud;
 
     protected override void OnStart()
     {
@@ -106,7 +113,7 @@ public class GhostPlayerMovement : GamePlayerMovement
                 CmdDash();
                 _sentDashCommand = true;
                 _predictedIsPreparingToDash = true;
-                //_ = _audioController.Bind(c => c.PlayDashPrepareSound());
+                _ = _ghostAudioController.Bind(c => c.PlayPrepareToDashSound());
             }
         }
         else
@@ -122,8 +129,8 @@ public class GhostPlayerMovement : GamePlayerMovement
         if (!isClient)
             return;
 
-        //if (newValue && !_predictedIsPreparingToDash)
-        //    _ = _audioController.Bind(c => c.PlayDashPrepareSound());
+        if (newValue && !_predictedIsPreparingToDash)
+            _ = _ghostAudioController.Bind(c => c.PlayPrepareToDashSound());
 
         _predictedIsPreparingToDash = newValue;
     }
@@ -134,8 +141,8 @@ public class GhostPlayerMovement : GamePlayerMovement
         if (!isClient)
             return;
 
-        //if (newValue)
-        //    _ = _audioController.Bind(c => c.PlayDashSound());
+        if (newValue)
+            _ = _ghostAudioController.Bind(c => c.PlayDashSound());
 
         var layer = newValue ? LayerMask.NameToLayer("Ghost Dashing") : LayerMask.NameToLayer("Ghost");
 
@@ -174,11 +181,15 @@ public class GhostPlayerMovement : GamePlayerMovement
 
         IsPreparingToDash = true;
 
+        _ = _animator.Bind(a => a.SetTrigger("PrepareToDash"));
+
         yield return new WaitForSeconds(_dashPrepareDuration);
 
         DashDirection = new Vector3(transform.forward.x, 0f, transform.forward.z);
         IsPreparingToDash = false;
         IsDashing = true;
+
+        _ = _animator.Bind(a => a.SetTrigger("Dash"));
 
         gameObject.layer = dashingLayer;
         foreach (Transform child in transform)
@@ -189,6 +200,8 @@ public class GhostPlayerMovement : GamePlayerMovement
 
         DashDirection = Vector3.zero;
         IsDashing = false;
+
+        _ = _animator.Bind(a => a.SetTrigger("StopDash"));
 
         _inducedFear = false;
 
@@ -216,56 +229,56 @@ public class GhostPlayerMovement : GamePlayerMovement
         if (!isServer)
             return;
 
-        if (IsDashing)
+        bool isMoving = input.Move.sqrMagnitude > 0.001f;
+
+        _ = IsDashing
+            ? _staminaManager.Bind((sm, dt) => sm.ServerDrain(dt), deltaTime)
+            : _staminaManager.Bind((sm, dt, isMoving) => sm.ServerRegenerate(dt, isMoving), deltaTime, isMoving);
+
+        _ = _animator.Bind(a => a.animator.SetInteger("MoveMode", isMoving ? 1 : 0));
+
+        if (!IsDashing || _inducedFear)
+            return;
+
+        var touchedFearReceivers = ServerGetTouchedFearReceivers();
+
+        if (touchedFearReceivers.None())
+            return;
+
+        _inducedFear = true;
+        GameManager.Instance.ServerDecreaseGameTimeBy(_fearGameTimeDecrease);
+        RpcInduceFear();
+
+        foreach (var fearReceiver in touchedFearReceivers)
+            fearReceiver.ServerStartBeingAfraidOf(transform);
+
+        if (!TryGetComponent(out GhostIllusionAbility ghostIllusionAbility) || !ghostIllusionAbility.IsActivated)
+            return;
+
+        var networkRoomsWithIllusion = ghostIllusionAbility.NetworkRoomsWithIllusion;
+
+        var networkRoomsFearReceiversAreIn = touchedFearReceivers.SelectMany(fearReceiver =>
         {
-            _ = _staminaManager.Bind((staminaManager, dt) => staminaManager.ServerDrain(dt), deltaTime);
+            int overlapCount = Physics.OverlapSphereNonAlloc
+            (
+                position: fearReceiver.transform.position,
+                radius: 0.01f,
+                results: _roomOverlaps,
+                layerMask: _roomLayerMask,
+                queryTriggerInteraction: QueryTriggerInteraction.Collide
+            );
 
-            if (_inducedFear)
-                return;
+            return _roomOverlaps
+                .Take(overlapCount)
+                .Select(o => o.TryGetComponent(out Room room) ? room : null)
+                .NonNullItems()
+                .Select(r => r.LinkedNetworkRoom);
+        });
 
-            var touchedFearReceivers = ServerGetTouchedFearReceivers();
+        bool atLeastOneReceiverIsInRoomWithIllusion = networkRoomsWithIllusion.Intersect(networkRoomsFearReceiversAreIn).Any();
 
-            if (touchedFearReceivers.None())
-                return;
-
-            _inducedFear = true;
-            GameManager.Instance.ServerDecreaseGameTimeBy(_fearGameTimeDecrease);
-            RpcInduceFear();
-
-            foreach (var fearReceiver in touchedFearReceivers)
-                fearReceiver.ServerStartBeingAfraidOf(transform);
-
-            if (!TryGetComponent(out GhostIllusionAbility ghostIllusionAbility) || !ghostIllusionAbility.IsActivated)
-                return;
-
-            var roomsWithIllusion = ghostIllusionAbility.RoomsWithIllusion;
-
-            var roomsFearReceiversAreIn = touchedFearReceivers.SelectMany(fearReceiver =>
-            {
-                int overlapCount = Physics.OverlapSphereNonAlloc
-                (
-                    position: fearReceiver.transform.position,
-                    radius: 0.01f,
-                    results: _roomOverlaps,
-                    layerMask: _roomLayerMask,
-                    queryTriggerInteraction: QueryTriggerInteraction.Collide
-                );
-
-                return _roomOverlaps
-                    .Take(overlapCount)
-                    .Select(o => o.TryGetComponent(out Room room) ? room : null)
-                    .NonNullItems();
-            });
-
-            bool atLeastOneReceiverIsInRoomWithIllusion = roomsWithIllusion.Intersect(roomsFearReceiversAreIn).Any();
-
-            if (atLeastOneReceiverIsInRoomWithIllusion)
-                ghostIllusionAbility.ServerDeactivate();
-        }
-        else
-        {
-            _ = _staminaManager.Bind((staminaManager, dt, isMoving) => staminaManager.ServerRegenerate(dt, isMoving), deltaTime, input.Move.sqrMagnitude > 0.001f);
-        }
+        if (atLeastOneReceiverIsInRoomWithIllusion)
+            ghostIllusionAbility.ServerDeactivate();
     }
 
     [Server]
@@ -281,9 +294,11 @@ public class GhostPlayerMovement : GamePlayerMovement
         int overlapCount = Physics.OverlapCapsuleNonAlloc
         (
             point0,
-            point1, 
+            point1,
             radius: inflatedRadius,
-            results: _playerOverlaps
+            results: _playerOverlaps,
+            layerMask: _fearReceiversLayerMask,
+            queryTriggerInteraction: QueryTriggerInteraction.Ignore
         );
 
         var touchedFearReceivers = _playerOverlaps
@@ -298,7 +313,7 @@ public class GhostPlayerMovement : GamePlayerMovement
     [ClientRpc]
     public void RpcInduceFear()
     {
-        // _ = _audioController.Bind(c => c.PlayInduceFearSound());
+        _ = _ghostAudioController.Bind(c => c.PlayInduceFearSound());
     }
 
     protected override void MoveVertically(PlayerInputData input, float deltaTime)
@@ -338,6 +353,8 @@ public class GhostPlayerMovement : GamePlayerMovement
         if (_predictedIsPreparingToDash || IsPreparingToDash || IsDashing)
             return Vector2.zero;
 
+        float speed = IsInPreparePhase ? _preparePhaseSpeed : _walkingSpeed;
+
         Vector3 startPositionWithoutY = new(startPosition.x, 0f, startPosition.z);
         Vector3 endPositionWithoutY = new(endPosition.x, 0f, endPosition.z);
 
@@ -346,6 +363,6 @@ public class GhostPlayerMovement : GamePlayerMovement
         float forwardProjection = Vector3.Dot(positionDelta, transform.forward);
         float rightProjection = Vector3.Dot(positionDelta, transform.right);
 
-        return new Vector2(rightProjection, forwardProjection) / (_walkingSpeed * deltaTime);
+        return new Vector2(rightProjection, forwardProjection) / (speed * deltaTime);
     }
 }

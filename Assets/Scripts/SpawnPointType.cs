@@ -14,5 +14,12 @@ public enum SpawnPointType
     Note,
     PuzzleNote,
     PuzzleDoor,
-    InvestigatorWinTrigger
+    InvestigatorWinTrigger,
+    CabinetDoor,
+    Drawer,
+    DrawerAmulet,
+    DrawerNote,
+    Holdable,
+    TimeCatcher,
+    TimeCatcherTrapDoor
 }

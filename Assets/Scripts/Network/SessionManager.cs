@@ -13,6 +13,7 @@ public class SessionManager : MonoBehaviour
     public static SessionManager Instance { get; private set; }
 
     public static UnityEvent OnSignedIn = new();
+    public static UnityEvent OnFailedToSignIn = new();
     public bool IsSignedIn { get; private set; }
     public ISession ActiveSession { get; private set; }
 
@@ -50,6 +51,7 @@ public class SessionManager : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogException(ex);
+            OnFailedToSignIn.Invoke();
         }
     }
 
@@ -101,7 +103,7 @@ public class SessionManager : MonoBehaviour
         };
 
         options = _useRelay
-            ? options.WithRelayNetwork().WithNetworkOptions(new NetworkOptions { RelayProtocol = _relayProtocol})
+            ? options.WithRelayNetwork().WithNetworkOptions(new NetworkOptions { RelayProtocol = _relayProtocol })
             : options.WithDirectNetwork(new DirectNetworkOptions(LobbyNetworkManager.Instance.Port));
 
         options = options.WithNetworkHandler(new MirrorNetworkHandler());

@@ -11,13 +11,24 @@ public class Note : NetworkBehaviour
 
     private static List<string> s_loreTexts;
     private static string s_candlesticksPuzzleText;
+    private static string s_holdablesPuzzleText;
     private static string s_statuesPuzzleText;
     private static string s_rotatingMirrorsPuzzleText;
+    private static string s_clocksPuzzleText;
 
-    [SyncVar]
+    [SerializeField] private NoteAudioController _audioController;
+
+    [SyncVar(hook = nameof(OnClientTextChanged))]
     public string Text;
 
+    private string _text;
     private NoteReader _noteReader;
+
+    [Client]
+    public void OnClientTextChanged(string oldValue, string newValue)
+    {
+        _text = newValue;
+    }
 
     [Client]
     public override void OnStartClient()
@@ -42,6 +53,7 @@ public class Note : NetworkBehaviour
             _ = NetworkClient.localPlayer.TryGetComponent(out _noteReader);
 
         _ = _noteReader.Bind((cnr, note) => cnr.OpenNoteReadingMenu(note), this);
+        _ = _audioController.Bind(c => c.PlayStartReadingSound());
     }
 
     [Client]
@@ -51,19 +63,20 @@ public class Note : NetworkBehaviour
             return;
 
         _ = _noteReader.Bind(cnr => cnr.CloseNoteReadingMenu());
+        _ = _audioController.Bind(c => c.PlayStopReadingSound());
     }
 
     public string GetCorruptedText(float corruptionFraction)
     {
         if (corruptionFraction == 0f)
-            return Text;
+            return _text;
 
         float clampedCorruptionFraction = Mathf.Clamp01(corruptionFraction);
 
-        int charactersToCorrupt = Mathf.FloorToInt(clampedCorruptionFraction * Text.Length);
-        var characterIndices = Enumerable.Range(0, Text.Length).ToList();
+        int charactersToCorrupt = Mathf.FloorToInt(clampedCorruptionFraction * _text.Length);
+        var characterIndices = Enumerable.Range(0, _text.Length).ToList();
 
-        StringBuilder sb = new(Text);
+        StringBuilder sb = new(_text);
 
         for (int i = 0; i < charactersToCorrupt; i++)
         {
@@ -85,7 +98,22 @@ public class Note : NetworkBehaviour
         if (s_loreTexts == null || s_loreTexts.None())
             GetNotesFromResources();
 
-        Text = s_loreTexts.UnityRandomItem();
+        int randomIndex = UnityEngine.Random.Range(0, s_loreTexts.Count);
+
+        _text = s_loreTexts[randomIndex];
+        RpcSetLoreText(randomIndex);
+    }
+
+    [ClientRpc]
+    public void RpcSetLoreText(int index)
+    {
+        if (!isClient)
+            return;
+
+        if (s_loreTexts == null || s_loreTexts.None())
+            GetNotesFromResources();
+
+        _text = s_loreTexts[index];
     }
 
     [Server]
@@ -99,7 +127,8 @@ public class Note : NetworkBehaviour
         for (int i = 0; i < length; i++)
             _ = sb.Append(CORRUPTED_CHARACTERS.UnityRandomItem());
 
-        Text = sb.ToString();
+        _text = sb.ToString();
+        Text = _text;
     }
 
     [Server]
@@ -111,7 +140,37 @@ public class Note : NetworkBehaviour
         if (string.IsNullOrEmpty(s_candlesticksPuzzleText))
             GetNotesFromResources();
 
-        Text = s_candlesticksPuzzleText;
+        _text = s_candlesticksPuzzleText;
+        Text = _text;
+    }
+
+    [Server]
+    public void ServerSetHoldablesPuzzleText(List<HoldablePlacementTarget> placementTargets)
+    {
+        if (!isServer)
+            return;
+
+        if (string.IsNullOrEmpty(s_holdablesPuzzleText))
+            GetNotesFromResources();
+
+        var holdableTypeNames = placementTargets
+            .Select(t => t.HoldableType)
+            .Select(t => t switch
+                {
+                    HoldableType.Skull => "череп",
+                    HoldableType.Globe => "глобус",
+                    HoldableType.Crystal => "аметистовый кристалл",
+                    _ => "null"
+                }
+            )
+            .ToList();
+
+        var placementTargetNames = placementTargets
+            .Select(t => t.DisplayName)
+            .ToList();
+
+        _text = string.Format(s_holdablesPuzzleText, holdableTypeNames[0], placementTargetNames[0], holdableTypeNames[1], placementTargetNames[1], holdableTypeNames[2], placementTargetNames[2]);
+        Text = _text;
     }
 
     [Server]
@@ -137,7 +196,8 @@ public class Note : NetworkBehaviour
             _ => "юг"
         };
 
-        Text = string.Format(s_statuesPuzzleText, direction);
+        _text = string.Format(s_statuesPuzzleText, direction);
+        Text = _text;
     }
 
     [Server]
@@ -149,7 +209,21 @@ public class Note : NetworkBehaviour
         if (string.IsNullOrEmpty(s_rotatingMirrorsPuzzleText))
             GetNotesFromResources();
 
-        Text = s_rotatingMirrorsPuzzleText;
+        _text = s_rotatingMirrorsPuzzleText;
+        Text = _text;
+    }
+
+    [Server]
+    public void ServerSetClocksPuzzleText()
+    {
+        if (!isServer)
+            return;
+
+        if (string.IsNullOrEmpty(s_clocksPuzzleText))
+            GetNotesFromResources();
+
+        _text = s_clocksPuzzleText;
+        Text = _text;
     }
 
     private void GetNotesFromResources()
@@ -175,7 +249,9 @@ public class Note : NetworkBehaviour
 
         s_loreTexts = noteCollection.LoreTexts;
         s_candlesticksPuzzleText = noteCollection.CandlesticksPuzzleText;
+        s_holdablesPuzzleText = noteCollection.HoldablesPuzzleText;
         s_statuesPuzzleText = noteCollection.StatuesPuzzleText;
         s_rotatingMirrorsPuzzleText = noteCollection.RotatingMirrorsPuzzleText;
+        s_clocksPuzzleText = noteCollection.ClocksPuzzleText;
     }
 }
